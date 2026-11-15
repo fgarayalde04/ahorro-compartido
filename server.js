@@ -1,7 +1,7 @@
 // Ahorro Compartido · servidor
-//  /            landing para empleados (validación de demanda)
+//  /            página del producto (empresas y empleados)
 //  /app         producto: registro de empresas, portal de RR.HH., invitaciones y cuenta del empleado
-//  /demo        prototipo navegable con datos ficticios
+//  /encuesta    encuesta para empleados (validación de demanda)
 //  /admin       panel del equipo con los resultados del MVP
 const express = require('express');
 const path = require('path');
@@ -57,7 +57,7 @@ app.use('/api/', (req, res, next) => {
 });
 
 const planDe = e => ({ match: +e.match, tope: +e.tope, vesting: +e.vesting, fee: +e.fee, tc: +e.tc, planOk: e.plan_ok });
-const empresaJSON = e => e && ({ id: e.id, nombre: e.nombre, rut: e.rut, cantEmpleados: e.cant_empleados, ...planDe(e) });
+const empresaJSON = e => e && ({ id: e.id, nombre: e.nombre, rut: e.rut, cantEmpleados: e.cant_empleados, simulacion: !!e.demo, ...planDe(e) });
 const coPct = (emp, e) => Math.min(+emp.pct * +e.match, +e.tope);
 
 // ---------- auth ----------
@@ -204,6 +204,67 @@ app.post('/api/empresa/cierre', auth('empresa'), wrap(async (req, res) => {
   res.json(r);
 }));
 
+// ---------- simulación: empresa de ejemplo por visitante, separada de las cuentas reales y borrada a las 24 h ----------
+const SIM_HORAS = 24;
+async function borrarEmpresa(id) {
+  const us = await q('SELECT id FROM usuarios WHERE empresa_id=$1', [id]);
+  for (const u of us) await q('DELETE FROM sesiones WHERE usuario_id=$1', [u.id]);
+  for (const t of ['movimientos', 'cierres', 'empleados', 'usuarios']) await q(`DELETE FROM ${t} WHERE empresa_id=$1`, [id]);
+  await q('DELETE FROM empresas WHERE id=$1', [id]);
+}
+async function limpiarSimulaciones() {
+  const viejas = await q('SELECT id FROM empresas WHERE demo = true AND creado < $1', [new Date(Date.now() - SIM_HORAS * 3600e3)]);
+  for (const v of viejas) await borrarEmpresa(v.id);
+}
+async function crearSimulacion() {
+  const e = await one(`INSERT INTO empresas (nombre, rut, cant_empleados, match, tope, vesting, tc, plan_ok, demo) VALUES ('Empresa de ejemplo S.A.', '—', 120, 1, 15, 3, 40, true, true) RETURNING *`);
+  const suf = token().slice(0, 10).toLowerCase();
+  const rrhh = await one('INSERT INTO usuarios (email, nombre, hash, rol, empresa_id) VALUES ($1,$2,$3,$4,$5) RETURNING id', [`rrhh-${suf}@simulacion.local`, 'RR.HH. (simulación)', 'sim', 'empresa', e.id]);
+  const gente = [
+    ['Ana Pérez', 'Analista de documentación', 62000, 4, 'URTH', 'adherido'],
+    ['Martín López', 'Desarrollador', 165000, 6, 'SPY', 'adherido'],
+    ['Camila Rodríguez', 'Coordinadora de operaciones', 98000, 5, 'URTH', 'adherido'],
+    ['Lucía Sosa', 'Ejecutiva comercial', 85000, 0, 'URTH', 'invitado']
+  ];
+  for (const [i, g] of gente.entries()) {
+    const mail = `empleado${i + 1}-${suf}@simulacion.local`;
+    const em = await one('INSERT INTO empleados (empresa_id, nombre, email, cargo, sueldo, estado, pct, fondo, invite_token, autorizado) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id',
+      [e.id, g[0], mail, g[1], g[2], g[5], g[3], g[4], g[5] === 'invitado' ? token() : null, g[5] === 'adherido' ? new Date() : null]);
+    if (g[5] === 'adherido') await q('INSERT INTO usuarios (email, nombre, hash, rol, empresa_id, empleado_id) VALUES ($1,$2,$3,$4,$5,$6)', [mail, g[0], 'sim', 'empleado', e.id, em.id]);
+  }
+  const hoy = ym(new Date());
+  for (let p = '2025-01'; p < hoy; p = addMonths(p, 1)) await aprobarCierre(e, p, 40);
+  return rrhh.id;
+}
+app.post('/api/simulacion/iniciar', wrap(async (req, res) => {
+  const u = await currentUser(req);
+  if (u) { const e = await one('SELECT demo FROM empresas WHERE id=$1', [u.empresa_id]); if (e?.demo) await borrarEmpresa(u.empresa_id); }
+  await startSession(req, res, await crearSimulacion());
+  res.json({ ok: true });
+}));
+app.get('/api/simulacion/perfiles', auth(), wrap(async (req, res) => {
+  const e = await one('SELECT * FROM empresas WHERE id=$1', [req.user.empresa_id]);
+  if (!e?.demo) return res.json({ simulacion: false });
+  const us = await q('SELECT id, nombre, rol FROM usuarios WHERE empresa_id=$1 ORDER BY rol DESC, id', [e.id]);
+  const inv = await q('SELECT nombre, invite_token FROM empleados WHERE empresa_id=$1 AND invite_token IS NOT NULL', [e.id]);
+  res.json({ simulacion: true, expira: new Date(new Date(e.creado).getTime() + SIM_HORAS * 3600e3), actual: req.user.id,
+    perfiles: us.map(x => ({ id: x.id, nombre: x.rol === 'empresa' ? 'Empresa (RR.HH.)' : x.nombre, rol: x.rol })), invitaciones: inv.map(x => ({ nombre: x.nombre, token: x.invite_token })) });
+}));
+app.post('/api/simulacion/cambiar', auth(), wrap(async (req, res) => {
+  const e = await one('SELECT demo FROM empresas WHERE id=$1', [req.user.empresa_id]);
+  if (!e?.demo) return res.status(403).json({ error: 'Solo en la simulación' });
+  const d = await one('SELECT id FROM usuarios WHERE id=$1 AND empresa_id=$2', [num(req.body?.usuarioId, 0, 1e9, 0), req.user.empresa_id]);
+  if (!d) return res.status(404).json({ error: 'Perfil no encontrado' });
+  await q('DELETE FROM sesiones WHERE token=$1', [cookies(req).ac_s]);
+  await startSession(req, res, d.id);
+  res.json({ ok: true });
+}));
+app.post('/api/simulacion/salir', auth(), wrap(async (req, res) => {
+  const e = await one('SELECT demo FROM empresas WHERE id=$1', [req.user.empresa_id]);
+  if (e?.demo) await borrarEmpresa(req.user.empresa_id);
+  res.setHeader('Set-Cookie', 'ac_s=; Path=/; Max-Age=0'); res.json({ ok: true });
+}));
+
 app.get('/api/empresa/cierres', auth('empresa'), wrap(async (req, res) => {
   res.json({ cierres: await q('SELECT periodo, tc, total_uyu, total_usd, aprobado FROM cierres WHERE empresa_id=$1 ORDER BY periodo DESC', [req.user.empresa_id]) });
 }));
@@ -308,8 +369,8 @@ app.post('/api/registros', wrap(async (req, res) => {
 app.get('/api/admin/datos', wrap(async (req, res) => {
   if (!isAdmin(req)) return res.status(401).json({ error: 'Clave incorrecta' });
   const eventos = await q('SELECT id, tipo, data, creado FROM eventos ORDER BY creado DESC LIMIT 20000');
-  const producto = await one(`SELECT (SELECT COUNT(*) FROM empresas) AS empresas, (SELECT COUNT(*) FROM empleados) AS empleados,
-    (SELECT COUNT(*) FROM empleados WHERE estado='adherido') AS adheridos, (SELECT COUNT(*) FROM cierres) AS cierres`);
+  const producto = await one(`SELECT (SELECT COUNT(*) FROM empresas WHERE demo = false) AS empresas,
+    (SELECT COUNT(*) FROM empleados WHERE empresa_id IN (SELECT id FROM empresas WHERE demo = false)) AS empleados`);
   res.json({ eventos, producto });
 }));
 app.delete('/api/admin/eventos/:id', wrap(async (req, res) => { if (!isAdmin(req)) return res.status(401).json({ error: 'Clave incorrecta' }); await q('DELETE FROM eventos WHERE id=$1', [req.params.id]); res.json({ ok: true }); }));
@@ -323,10 +384,12 @@ app.get('/api/admin/csv', wrap(async (req, res) => {
 }));
 
 app.get('/health', (req, res) => res.json({ ok: true }));
-app.get(['/app', '/invitacion/:t'], (req, res) => res.sendFile(path.join(PUB, 'app.html')));
+app.get(['/app', '/simulacion', '/invitacion/:t'], (req, res) => res.sendFile(path.join(PUB, 'app.html')));
 app.use(express.static(PUB, { extensions: ['html'] }));
 
 init().then(() => {
   app.listen(PORT, () => console.log(`Ahorro Compartido escuchando en el puerto ${PORT}`));
   Object.keys(FONDOS).forEach(t => refrescar(t).catch(() => {}));
+  limpiarSimulaciones().catch(e => console.warn(e.message));
+  setInterval(() => limpiarSimulaciones().catch(e => console.warn(e.message)), 60 * 60 * 1000);
 }).catch(e => { console.error('No se pudo iniciar la base de datos', e); process.exit(1); });

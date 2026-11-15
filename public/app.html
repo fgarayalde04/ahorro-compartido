@@ -83,11 +83,16 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:#0f1724;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:30}
 .toast.on{opacity:1}
 .copy{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#f6f7f9;border:1px solid var(--line);border-radius:8px;padding:6px 8px;word-break:break-all}
+.simbar{background:#ff8a00;color:#1d1300;padding:9px 20px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.simbar .tag{background:#1d1300;color:#ffb347;font-weight:800;letter-spacing:.08em;border-radius:6px;padding:3px 8px;font-size:12px}
+.simbar button{border:1px solid rgba(29,19,0,.35);background:rgba(255,255,255,.55);color:#1d1300;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
+.simbar button.on{background:#1d1300;color:#fff;border-color:#1d1300}.simbar .sp{flex:1}
 .hide{display:none!important}
 </style>
 </head>
 <body>
-<div class="top"><a class="logo" href="/app"><i>◎</i>Ahorro Compartido</a><div class="sp"></div><span class="who" id="who"></span><button id="logout" class="hide">Salir</button></div>
+<div class="top"><a class="logo" href="/"><i>◎</i>Ahorro Compartido</a><div class="sp"></div><span class="who" id="who"></span><button id="logout" class="hide">Salir</button></div>
+<div id="simbar" class="simbar hide"></div>
 <div id="root"></div>
 <div class="toast" id="toast"></div>
 <script>
@@ -110,20 +115,35 @@ async function api(method, url, body){
   if (!r.ok) throw new Error(j.error || 'Error ' + r.status);
   return j;
 }
-let ME = null, VIEW = 'inicio', AUTHTAB = 'login';
+let ME = null, VIEW = 'inicio', AUTHTAB = location.search.includes('registro') ? 'registro' : 'login';
 
 async function boot(){
+  if (location.pathname === '/simulacion'){ root.innerHTML = '<div class="auth"><div class="card"><h1>Preparando la simulación…</h1><p class="sub">Creamos una empresa de ejemplo con empleados y casi dos años de aportes a precios reales de mercado.</p></div></div>'; await api('POST', '/api/simulacion/iniciar'); history.replaceState(null, '', '/app'); VIEW = 'inicio'; }
   const inv = location.pathname.match(/^\/invitacion\/([\w-]+)/);
   ME = await api('GET', '/api/me');
+  await simBar();
   $('who').textContent = ME.usuario ? ME.usuario.nombre + (ME.empresa ? ' · ' + ME.empresa.nombre : '') : '';
   $('logout').classList.toggle('hide', !ME.usuario);
-  if (inv && !ME.usuario) return invitation(inv[1]);
+  if (inv && (!ME.usuario || ME.empresa?.simulacion)) return invitation(inv[1]);
   if (inv) return invitationLoggedIn(inv[1]);
   if (!ME.usuario) return authView();
   if (ME.usuario.rol === 'empresa') return ME.empresa.planOk ? portal() : planSetup(true);
   return employee();
 }
-$('logout').onclick = async () => { await api('POST', '/api/auth/logout'); location.href = '/app'; };
+$('logout').onclick = async () => { if (ME.empresa?.simulacion){ await api('POST', '/api/simulacion/salir'); location.href = '/'; return; } await api('POST', '/api/auth/logout'); location.href = '/app'; };
+async function simBar(){
+  const bar = $('simbar');
+  if (!ME.empresa?.simulacion){ bar.classList.add('hide'); return; }
+  const d = await api('GET', '/api/simulacion/perfiles');
+  bar.innerHTML = `<span class="tag">SIMULACIÓN</span><span>Empresa y personas de ejemplo, separadas de las cuentas reales. Se borra sola en 24 h. Ver como:</span>
+    ${d.perfiles.map(p => `<button data-u="${p.id}" class="${p.id === d.actual ? 'on' : ''}">${esc(p.nombre)}</button>`).join('')}
+    ${d.invitaciones.map(i => `<button data-inv="${i.token}">Invitación de ${esc(i.nombre.split(' ')[0])}</button>`).join('')}
+    <span class="sp"></span><button id="sOut">Salir de la simulación</button>`;
+  bar.classList.remove('hide');
+  bar.querySelectorAll('[data-u]').forEach(b => b.onclick = async () => { await api('POST', '/api/simulacion/cambiar', {usuarioId: +b.dataset.u}); VIEW = 'inicio'; ETAB = 'inicio'; history.replaceState(null, '', '/app'); boot(); });
+  bar.querySelectorAll('[data-inv]').forEach(b => b.onclick = () => { history.replaceState(null, '', '/invitacion/' + b.dataset.inv); boot(); });
+  $('sOut').onclick = async () => { await api('POST', '/api/simulacion/salir'); location.href = '/'; };
+}
 
 // ================= AUTH =================
 function authView(){
@@ -171,7 +191,7 @@ async function invitation(t){
     <h1 style="margin:10px 0 6px">${esc(inv.nombre.split(' ')[0])}, tu empresa invierte con vos</h1>
     <p class="sub">Por cada $1 que ahorres, ${esc(inv.empresa)} pone <b>$${inv.plan.match.toFixed(2)}</b>, hasta el ${pct(inv.plan.tope)} de tu sueldo. Todo se invierte en fondos indexados globales en una cuenta a tu nombre.</p>
     <label class="f"><b>Mail</b><input type="email" id="iEmail" value="${esc(inv.email || '')}"></label>
-    <label class="f"><b>Creá tu contraseña (mínimo 8 caracteres)</b><input type="password" id="iPass" autocomplete="new-password"></label>
+    <label class="f"><b>Creá tu contraseña (mínimo 8 caracteres)</b><input type="password" id="iPass" autocomplete="new-password" ${ME.empresa?.simulacion ? 'value="simulacion"' : ''}></label>
     <button class="btn block" id="go">Crear mi cuenta</button><p class="note" id="err" style="color:var(--bad);margin-top:10px"></p></div></div>`;
   $('go').onclick = async () => { try { await api('POST', '/api/invitacion/' + t, {email: $('iEmail').value, password: $('iPass').value}); history.replaceState(null, '', '/app'); boot(); } catch(e){ $('err').textContent = e.message; } };
 }

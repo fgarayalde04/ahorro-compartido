@@ -43,7 +43,7 @@ label b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px}
 </style>
 </head>
 <body>
-<div class="top"><b>Ahorro Compartido</b><span>Resultados del MVP</span><div class="sp"></div><a href="/" target="_blank">Landing</a><a href="/demo" target="_blank">Prototipo</a><button id="out" class="hide">Salir</button></div>
+<div class="top"><b>Ahorro Compartido</b><span>Resultados del MVP</span><div class="sp"></div><a href="/" target="_blank">Inicio</a><a href="/app" target="_blank">App</a><a href="/encuesta" target="_blank">Encuesta</a><button id="out" class="hide">Salir</button></div>
 <div class="login card" id="login">
   <h2>Panel del equipo</h2>
   <label><b>Clave</b><input type="password" id="pw" autocomplete="current-password"></label>
@@ -94,13 +94,13 @@ function render(ev){
   const csv = t => `/api/admin/csv?tipo=${t}&key=${encodeURIComponent(KEY)}`;
   const fmtD = d => new Date(d).toLocaleString('es-UY', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
   $('app').innerHTML = `
-  <h1>Resultados del MVP</h1><p class="sub">Datos en vivo de la landing para empleados, los pedidos de propuesta del prototipo y las entrevistas registradas. Actualizado: ${new Date().toLocaleString('es-UY')} <button class="btn sec sm" id="rf">Actualizar</button></p>
+  <h1>Resultados del MVP</h1><p class="sub">Datos en vivo de la encuesta para empleados, los pedidos de propuesta y las entrevistas registradas. Actualizado: ${new Date().toLocaleString('es-UY')} <button class="btn sec sm" id="rf">Actualizar</button></p>
   <div class="kpis">
-    <div class="kpi"><div class="l">Visitas a la landing</div><div class="v">${vis.length}</div></div>
+    <div class="kpi"><div class="l">Visitas a la encuesta</div><div class="v">${vis.length}</div></div>
     <div class="kpi"><div class="l">Empezaron el cálculo</div><div class="v">${ini.length}</div><div class="s">${pc(ini.length, vis.length) ?? '—'}% de las visitas</div></div>
     <div class="kpi"><div class="l">Respuestas completas</div><div class="v">${res.length}</div><div class="s">${pc(res.length, vis.length) ?? '—'}% de las visitas</div></div>
     <div class="kpi"><div class="l">"Sí, me sumaría"</div><div class="v">${yes}</div><div class="s">${pc(yes, res.length) ?? '—'}% de las respuestas</div></div>
-    <div class="kpi"><div class="l">Pedidos de propuesta</div><div class="v">${pro.length}</div><div class="s">desde el prototipo</div></div>
+    <div class="kpi"><div class="l">Pedidos de propuesta</div><div class="v">${pro.length}</div><div class="s">de empresas</div></div>
   </div>
   <div class="card"><h2>Métricas frente a los umbrales del protocolo</h2><table>
     <tr><th>Métrica</th><th class="n">Resultado</th><th class="n">Umbral</th><th>Estado</th></tr>
@@ -124,7 +124,7 @@ function render(ev){
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Respuestas de empleados</h2><a class="btn sec sm" href="${csv('respuesta')}">Descargar CSV</a></div>
     <div style="overflow-x:auto"><table><tr><th>Fecha</th><th>Código</th><th>¿Se suma?</th><th>Aporte</th><th>Sueldo</th><th>Fondo</th><th>Efectivo vs. beneficio</th><th>Beneficios</th><th>Contacto</th><th></th></tr>
     ${res.map(r => `<tr><td>${fmtD(r.creado)}</td><td>${esc(r.data.codigo)}</td><td>${esc(r.data.sumaria)}${r.data.motivo ? '<div class="note">' + esc(r.data.motivo) + '</div>' : ''}</td><td class="n">${esc(r.data.aporte)}%</td><td class="n">$${(+r.data.sueldo || 0).toLocaleString('es-UY')}</td><td>${esc(r.data.fondo)}</td><td>${esc(r.data.efectivo)}</td><td>1) ${esc(r.data.ben1)}<br>2) ${esc(r.data.ben2)}</td><td>${esc(r.data.nombre)} ${esc(r.data.contacto)}</td><td><button class="x" data-del="${r.id}" title="Borrar (ej.: respuesta de prueba)">✕</button></td></tr>`).join('') || '<tr><td colspan="10" class="note">Sin respuestas todavía</td></tr>'}</table></div></div>
-  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Pedidos de propuesta (prototipo)</h2><a class="btn sec sm" href="${csv('propuesta')}">Descargar CSV</a></div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Pedidos de propuesta</h2><a class="btn sec sm" href="${csv('propuesta')}">Descargar CSV</a></div>
     <table><tr><th>Fecha</th><th>Empresa</th><th>Contacto</th><th>Quiere</th><th>Plan simulado</th><th></th></tr>
     ${pro.map(r => `<tr><td>${fmtD(r.creado)}</td><td><b>${esc(r.data.empresa)}</b><div class="note">${esc(r.data.empleados)} empleados · ${esc(r.data.costo)}</div></td><td>${esc(r.data.contacto)}<div class="note">${esc(r.data.email)}</div></td><td>${esc(r.data.quiere)}</td><td class="note">${esc(r.data.plan)}</td><td><button class="x" data-del="${r.id}">✕</button></td></tr>`).join('') || '<tr><td colspan="6" class="note">Sin pedidos todavía</td></tr>'}</table></div>
   <div class="two">

@@ -9,11 +9,11 @@ Proyecto de **Nuevos Emprendimientos · Universidad ORT Uruguay · 2026**.
 | Ruta | Para quién | Qué hace |
 | --- | --- | --- |
 | `/app` | Empresas y empleados | **El producto.** La empresa se registra, define cuánto aporta (iguala hasta 1 a 1, con tope) y el vesting, carga a sus empleados con su sueldo y les manda un link de invitación. Cada empleado crea su cuenta, elige aporte y ETF (URTH o SPY) y autoriza el descuento. La empresa aprueba el cierre de cada mes y el sistema registra las cuotas al precio real de mercado. El empleado ve el valor de su cuenta, el rendimiento, la TIR, el vesting y sus movimientos. |
-| `/` | Empleados | Landing para validar la demanda: calcula el ahorro, pregunta si se sumarían y guarda la respuesta. |
-| `/demo` | Decisores de RR.HH. | Prototipo navegable del producto: portal de la empresa y app del empleado. Incluye el botón "Pedí la propuesta para tu empresa". |
+| `/` | Todos | Página del producto, con acceso para empresas y empleados. |
+| `/encuesta` | Empleados | Encuesta de validación: calcula el ahorro, pregunta si se sumarían y guarda la respuesta. Para medir por empresa: `/encuesta#isl`. |
 | `/admin` | Equipo | Panel con resultados en vivo: embudo, métricas contra los umbrales, respuestas, pedidos de propuesta, registro de entrevistas y descarga en CSV. |
 
-Para medir por empresa, cada link lleva un código: `https://TU-DOMINIO/#isl`, `/#prometeo`, `/#blend`.
+Para medir la encuesta por empresa, cada link lleva un código: `https://TU-DOMINIO/encuesta#isl`, `/encuesta#prometeo`.
 
 ## Publicar en Railway
 
@@ -39,6 +39,6 @@ Sin `DATABASE_URL`, los datos se guardan en `data.json` (solo para desarrollo).
 
 ## Aclaraciones
 
-- Es un MVP concierge: el sistema calcula y registra todo con precios reales (Yahoo Finance), pero la transferencia del dinero y la compra en el custodio las ejecuta el equipo a mano. El prototipo de `/demo` usa datos ficticios.
+- Es un MVP concierge: el sistema calcula y registra todo con precios reales (Yahoo Finance), pero la transferencia del dinero y la compra en el custodio las ejecuta el equipo a mano.
 - Sin `DATABASE_URL` la app usa una base en memoria (`pg-mem`) para desarrollo; `PRICE_MOCK=1` genera precios sintéticos sin internet.
 - La landing aclara a los participantes que es un proyecto de estudiantes y que sus respuestas son anónimas, salvo que dejen su contacto.
