@@ -23,14 +23,16 @@ a{color:inherit}
 .hero h1{font-size:42px;line-height:1.1;margin:0 auto 14px;letter-spacing:-.02em;max-width:780px}
 .hero p{color:#c8d3e6;font-size:18px;margin:0 auto 34px;max-width:680px}
 .pick{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1000px;margin:0 auto;text-align:left}
+.pick .empc{background:#fff;color:var(--ink);border-radius:18px;padding:24px;box-shadow:0 18px 40px rgba(0,0,0,.25)}
+.pick .empc .two{display:flex;gap:8px;flex-wrap:wrap}.pick .empc .two a{flex:1;display:block;text-align:center;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:9px 6px;font-weight:600;font-size:14px;box-shadow:none;text-decoration:none;white-space:nowrap}.pick .empc .two a.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
 .pick .simc{background:#fff8ee;color:var(--ink);border-radius:18px;padding:24px;border:2px dashed #ffb347}
 .pick .simc .ic{background:#1d1300;color:#ffb347;font-size:16px}
 .pick .simc .two{display:flex;gap:8px}.pick .simc .two a{flex:1;display:block;text-align:center;background:#1d1300;color:#fff;border-radius:10px;padding:9px 6px;font-weight:600;font-size:14px;box-shadow:none;text-decoration:none}
 @media(max-width:900px){.pick{grid-template-columns:1fr}.hero h1{font-size:32px}}
 .pick a{display:block;background:#fff;color:var(--ink);border-radius:18px;padding:24px;text-decoration:none;box-shadow:0 18px 40px rgba(0,0,0,.25);transition:transform .15s}
 .pick a:hover{transform:translateY(-3px)}
-.pick .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:22px;margin-bottom:12px}
-.pick h2{margin:0 0 4px;font-size:22px}
+.pick .ic,.pick .empc .ic{width:44px;height:44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:22px;margin-bottom:12px}
+.pick h2,.pick .empc h2{margin:0 0 4px;font-size:22px}
 .pick p{margin:0 0 14px;color:var(--muted);font-size:14px}
 .pick span.go{color:var(--accent);font-weight:700}
 .hero .alt{margin-top:22px;color:#c8d3e6;font-size:14px}
@@ -62,7 +64,7 @@ section h2.t{font-size:28px;margin:0 0 8px;letter-spacing:-.01em}
   <h1>Tu equipo ahorra en dólares. Tu empresa iguala cada peso.</h1>
   <p>Un beneficio de ahorro con aporte de la empresa, invertido en fondos indexados globales (MSCI World o S&P 500), en una cuenta a nombre de cada empleado.</p>
   <div class="pick">
-    <a href="/app?empresa"><div class="ic">🏢</div><h2>Soy empresa</h2><p>Ingresá al portal para ver a tu equipo y aprobar los aportes, o comenzá un plan nuevo.</p><span class="go">Entrar →</span></a>
+    <div class="empc"><div class="ic">🏢</div><h2>Soy empresa</h2><p>Mirá a tu equipo, cómo está configurado cada empleado y aprobá los aportes del mes.</p><div class="two"><a href="/app?empresa" class="pri">Ingresar</a><a href="/app?registro">Registrar empresa nueva</a></div></div>
     <a href="/app?empleado"><div class="ic">👤</div><h2>Soy empleado</h2><p>Mirá tu cuenta: saldo, rendimiento, cuánto aporta tu empresa y tus movimientos.</p><span class="go">Entrar →</span></a>
     <div class="simc"><div class="ic">▶</div><h2>Simulación</h2><p>Mirá una empresa de ejemplo funcionando, sin registrarte. Se borra sola.</p><div class="two"><a href="/simulacion">Como empresa</a><a href="/simulacion?empleado">Como empleado</a></div></div>
   </div>
