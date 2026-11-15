@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulá · Ahorro Compartido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#121620;--muted:#5d6675;--line:#e2e5ea;--accent:#1f6feb;--accent-soft:#e9f1fe;--good:#167a48;--good-soft:#e5f3ec;--bg:#f4f5f7}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.45;font-size:14px}
+.top{display:flex;align-items:center;gap:18px;padding:14px 24px;background:#fff;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;text-decoration:none;color:var(--ink)}
+.logo i{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-style:normal;font-size:15px}
+.top .sp{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:#fff;border-radius:10px;padding:11px 18px;font-weight:600;text-decoration:none;border:0;font-size:14px;cursor:pointer;font-family:inherit}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:7px 12px;font-size:13px}
+main{max-width:1100px;margin:0 auto;padding:26px 24px 40px}
+h1{font-size:26px;margin:0 0 4px}.sub{color:var(--muted);margin:0 0 18px}
+.mode{display:flex;background:#e6e8ec;border-radius:12px;padding:4px;max-width:420px;margin-bottom:22px}
+.mode a{flex:1;text-align:center;padding:10px;border-radius:9px;font-weight:600;color:var(--muted);text-decoration:none}
+.mode a.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:20px}
+@media(max-width:920px){.grid{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 14px}
+label.f{display:block;margin-bottom:14px;color:var(--muted);font-size:13px}
+label.f b{display:flex;justify-content:space-between;color:var(--ink);font-weight:600;font-size:14px;margin-bottom:5px}
+label.f b output{color:var(--accent)}
+input[type=number],input[type=text]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{flex:1;border:0;background:#fff;padding:9px 6px;font:inherit;font-size:13px;color:var(--muted);cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}.seg button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:700px){.kpis{grid-template-columns:1fr}}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.kpi.hl{background:var(--accent-soft);border-color:#c9dcfb}
+.kpi .l{font-size:12px;color:var(--muted)}.kpi .v{font-size:23px;font-weight:800;margin-top:2px}.kpi .s{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+td input{padding:6px 8px}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px}
+.note{font-size:12px;color:var(--muted)}
+.cta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:#0f1724;color:#fff;border-radius:14px;padding:20px}
+.cta p{margin:0;flex:1;min-width:240px;color:#c8d3e6}.cta b{color:#fff}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="top"><a class="logo" href="/"><i>◎</i>Ahorro Compartido</a><div class="sp"></div><a class="btn sec sm" href="/">Volver al inicio</a></div>
+<main>
+  <h1>Simulá</h1>
+  <p class="sub">Cargá tus propios números y mirá el resultado al instante. No se guarda nada.</p>
+  <div class="mode"><a href="#empresa" id="mE">Como empresa</a><a href="#empleado" id="mP">Como empleado</a></div>
+
+  <!-- ===== EMPRESA ===== -->
+  <section id="vE">
+    <div class="grid">
+      <div>
+        <div class="card"><h2>Tu plan</h2>
+          <label class="f"><b>La empresa pone por cada $1 del empleado <output id="eMo"></output></b><input type="range" id="eM" min="0.25" max="1" step="0.25" value="1"></label>
+          <label class="f"><b>Tope del aporte de la empresa <output id="eTo"></output></b><input type="range" id="eT" min="1" max="15" step="0.5" value="15"></label>
+          <label class="f"><b>Vesting del aporte de la empresa</b><div class="seg" id="eV"><button data-v="3" class="on">3 años</button><button data-v="5">5 años</button><button data-v="0">Sin vesting</button></div></label>
+          <label class="f"><b>Tipo de cambio ($ por US$)</b><input type="number" id="eTC" value="40" step="0.5"></label></div>
+        <div class="card"><h2>Agregar empleados</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input type="text" id="aN" placeholder="Nombre"><input type="number" id="aS" placeholder="Sueldo ($)" step="1000"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><input type="number" id="aP" placeholder="Aporta (%)" step="0.5" min="0" max="15"><input type="number" id="aQ" placeholder="Cantidad" value="1" min="1"></div>
+          <button class="btn" id="aAdd" style="margin-top:10px;width:100%">Agregar</button>
+          <p class="note" style="margin:8px 0 0">Con "Cantidad" cargás un grupo de personas con el mismo sueldo, por ejemplo 20 administrativos.</p></div>
+      </div>
+      <div>
+        <div class="kpis">
+          <div class="kpi hl"><div class="l">Te cuesta por mes</div><div class="v" id="eK1"></div><div class="s" id="eK1s"></div></div>
+          <div class="kpi"><div class="l">Por año</div><div class="v" id="eK2"></div><div class="s" id="eK2s"></div></div>
+          <div class="kpi"><div class="l">Tu equipo en 5 años</div><div class="v" id="eK3"></div><div class="s">valor de todas las cuentas</div></div>
+        </div>
+        <div class="card"><h2>Tus empleados</h2><div style="overflow-x:auto"><table id="eTab"></table></div>
+          <p class="note" style="margin:10px 0 0">Podés editar sueldo, aporte y cantidad directamente en la tabla.</p></div>
+        <div class="card"><h2>Costo mensual</h2><table id="eCost"></table>
+          <p class="note" style="margin:10px 0 0">Servicio de referencia: $250 por empleado por mes. Si el aporte va a una cuenta de inversión, podría haber cargas de BPS a validar con un contador.</p></div>
+        <div class="cta"><p><b>¿Te sirve este plan?</b> Registrá tu empresa, configuralo y cargá a tu equipo.</p><a class="btn" href="/app?registro">Registrar mi empresa</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== EMPLEADO ===== -->
+  <section id="vP" class="hide">
+    <div class="grid">
+      <div>
+        <div class="card"><h2>Tus datos</h2>
+          <label class="f"><b>Tu sueldo nominal ($ por mes)</b><input type="number" id="pS" value="70000" step="1000"></label>
+          <label class="f"><b>Cuánto aportás <output id="pPo"></output></b><input type="range" id="pP" min="1" max="15" step="0.5" value="5"></label>
+          <label class="f"><b>Tu empresa pone por cada $1 tuyo <output id="pMo"></output></b><input type="range" id="pM" min="0" max="1" step="0.25" value="1"></label>
+          <label class="f"><b>Tope del aporte de la empresa <output id="pTo"></output></b><input type="range" id="pT" min="1" max="15" step="0.5" value="15"></label>
+          <label class="f"><b>Vesting del aporte de la empresa</b><div class="seg" id="pV"><button data-v="3" class="on">3 años</button><button data-v="5">5 años</button><button data-v="0">Sin vesting</button></div></label>
+          <label class="f"><b>Rendimiento anual estimado <output id="pRo"></output></b><input type="range" id="pR" min="0" max="12" step="0.5" value="10"></label>
+          <label class="f"><b>Tipo de cambio ($ por US$)</b><input type="number" id="pTC" value="40" step="0.5"></label></div>
+      </div>
+      <div>
+        <div class="kpis">
+          <div class="kpi"><div class="l">Por mes se invierte</div><div class="v" id="pK1"></div><div class="s" id="pK1s"></div></div>
+          <div class="kpi hl"><div class="l">En 5 años tendrías</div><div class="v" id="pK2"></div><div class="s" id="pK2s"></div></div>
+          <div class="kpi"><div class="l">En 10 años tendrías</div><div class="v" id="pK3"></div><div class="s" id="pK3s"></div></div>
+        </div>
+        <div class="card"><h2>Cómo crece tu cuenta</h2><svg id="pChart" viewBox="0 0 640 250" width="100%" role="img" aria-label="Crecimiento de la cuenta"></svg></div>
+        <div class="card"><h2>Año por año</h2><table id="pTab"></table>
+          <p class="note" style="margin:10px 0 0">El rendimiento de ~10% anual en dólares es el promedio histórico aproximado del MSCI World y del S&P 500. Rendimientos pasados no garantizan rendimientos futuros.</p></div>
+        <div class="cta"><p><b>¿Querés este beneficio?</b> Mostrale esta simulación a RR.HH. de tu empresa.</p><a class="btn" href="/">Conocé Ahorro Compartido</a></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const money = v => '$' + Math.round(v).toLocaleString('es-UY');
+const usd = v => 'US$ ' + Math.round(v).toLocaleString('es-UY');
+const pct = v => (Math.round(v * 100) / 100).toLocaleString('es-UY') + '%';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FEE = 250, R = 0.10;
+function seg(id, cb){ let v = +document.querySelector('#' + id + ' .on').dataset.v; document.querySelectorAll('#' + id + ' button').forEach(b => b.onclick = () => { v = +b.dataset.v; document.querySelectorAll('#' + id + ' button').forEach(x => x.classList.toggle('on', x === b)); cb(); }); return () => v; }
+function grow(eU, cU, months, r){ const i = Math.pow(1 + r, 1 / 12) - 1; let bE = 0, bC = 0; for (let m = 0; m < months; m++){ bE = bE * (1 + i) + eU; bC = bC * (1 + i) + cU; } return {bE, bC}; }
+
+// ---------- modo ----------
+function route(){ const emp = location.hash === '#empleado'; $('vE').classList.toggle('hide', emp); $('vP').classList.toggle('hide', !emp); $('mE').classList.toggle('on', !emp); $('mP').classList.toggle('on', emp); }
+window.addEventListener('hashchange', route);
+
+// ---------- empresa ----------
+let team = [{n:'Administrativos', s:55000, p:4, q:20}, {n:'Analistas', s:85000, p:5, q:12}, {n:'Gerentes', s:180000, p:6, q:3}];
+const eVest = seg('eV', calcE);
+function calcE(){
+  const M = +$('eM').value, T = +$('eT').value, TC = +$('eTC').value || 40;
+  $('eMo').textContent = '$' + M.toFixed(2); $('eTo').textContent = pct(T) + ' del sueldo';
+  let n = 0, aE = 0, aC = 0, val5 = 0;
+  team.forEach(t => { const co = Math.min(t.p * M, T); t.co = co; t.ue = t.s * t.p / 100; t.uc = t.s * co / 100; n += t.q; aE += t.ue * t.q; aC += t.uc * t.q; const g = grow(t.ue / TC, t.uc / TC, 60, R); val5 += (g.bE + g.bC) * t.q; });
+  const fee = n * FEE, tot = aC + fee, nom = team.reduce((s, t) => s + t.s * t.q, 0);
+  $('eK1').textContent = money(tot); $('eK1s').textContent = n + ' empleados · ' + (nom ? pct(tot / nom * 100) : '—') + ' de la nómina';
+  $('eK2').textContent = money(tot * 12); $('eK2s').textContent = n ? money(tot / n) + ' por empleado por mes' : '';
+  $('eK3').textContent = usd(val5);
+  $('eTab').innerHTML = `<tr><th>Empleado o grupo</th><th class="n">Cant.</th><th class="n">Sueldo</th><th class="n">Aporta</th><th class="n">Empresa pone</th><th class="n">Costo empresa/mes</th><th></th></tr>` +
+    (team.map((t, i) => `<tr><td>${esc(t.n)}</td><td class="n"><input type="number" data-i="${i}" data-k="q" value="${t.q}" min="1" style="width:64px;text-align:right"></td>
+      <td class="n"><input type="number" data-i="${i}" data-k="s" value="${t.s}" step="1000" style="width:110px;text-align:right"></td>
+      <td class="n"><input type="number" data-i="${i}" data-k="p" value="${t.p}" step="0.5" min="0" max="15" style="width:64px;text-align:right">%</td>
+      <td class="n">${pct(t.co)}<div class="note">${money(t.uc)} c/u</div></td><td class="n">${money(t.uc * t.q)}</td><td><button class="x" data-del="${i}" title="Quitar">✕</button></td></tr>`).join('') || '<tr><td colspan="7" class="note">Agregá empleados a la izquierda.</td></tr>');
+  $('eCost').innerHTML = `<tr><th>Concepto</th><th class="n">Por mes</th><th class="n">Por año</th></tr>
+    <tr><td>Aportes de la empresa</td><td class="n">${money(aC)}</td><td class="n">${money(aC * 12)}</td></tr>
+    <tr><td>Servicio (${n} × ${money(FEE)})</td><td class="n">${money(fee)}</td><td class="n">${money(fee * 12)}</td></tr>
+    <tr><td><b>Total para la empresa</b></td><td class="n"><b>${money(tot)}</b></td><td class="n"><b>${money(tot * 12)}</b></td></tr>
+    <tr><td class="note">Aportan los empleados (descuento de su sueldo)</td><td class="n note">${money(aE)}</td><td class="n note">${money(aE * 12)}</td></tr>`;
+  document.querySelectorAll('#eTab input').forEach(inp => inp.onchange = () => { team[+inp.dataset.i][inp.dataset.k] = Math.max(0, +inp.value || 0); calcE(); });
+  document.querySelectorAll('#eTab [data-del]').forEach(b => b.onclick = () => { team.splice(+b.dataset.del, 1); calcE(); });
+}
+$('aAdd').onclick = () => { const n = $('aN').value.trim() || 'Empleado', s = +$('aS').value, p = +$('aP').value, q = Math.max(1, +$('aQ').value || 1); if (!s){ $('aS').focus(); return; } team.push({n, s, p: Math.min(15, Math.max(0, p || 4)), q}); ['aN','aS','aP'].forEach(id => $(id).value = ''); $('aQ').value = 1; calcE(); };
+['eM','eT','eTC'].forEach(id => $(id).addEventListener('input', calcE));
+
+// ---------- empleado ----------
+const pVest = seg('pV', calcP);
+function calcP(){
+  const S = +$('pS').value || 0, P = +$('pP').value, M = +$('pM').value, T = +$('pT').value, r = +$('pR').value / 100, TC = +$('pTC').value || 40, V = pVest();
+  $('pPo').textContent = pct(P) + ' del sueldo'; $('pMo').textContent = '$' + M.toFixed(2); $('pTo').textContent = pct(T) + ' del sueldo'; $('pRo').textContent = pct(r * 100);
+  const co = Math.min(P * M, T), ue = S * P / 100, uc = S * co / 100, eU = ue / TC, cU = uc / TC;
+  $('pK1').textContent = money(ue + uc); $('pK1s').textContent = 'vos ' + money(ue) + ' + empresa ' + money(uc);
+  const g5 = grow(eU, cU, 60, r), g10 = grow(eU, cU, 120, r);
+  $('pK2').textContent = usd(g5.bE + g5.bC); $('pK2s').textContent = 'pusiste ' + usd(eU * 60);
+  $('pK3').textContent = usd(g10.bE + g10.bC); $('pK3s').textContent = 'pusiste ' + usd(eU * 120);
+  let rows = `<tr><th>Año</th><th class="n">Pusiste vos</th><th class="n">Puso la empresa</th><th class="n">Rendimiento</th><th class="n">Valor de la cuenta</th><th class="n">Si te vas, te llevás</th></tr>`;
+  const pts = [];
+  for (let y = 1; y <= 10; y++){
+    const g = grow(eU, cU, y * 12, r), f = V ? Math.min(y / V, 1) : 1, tot = g.bE + g.bC;
+    pts.push({y, tot, ap: (eU + cU) * y * 12});
+    if ([1, 2, 3, 5, 7, 10].includes(y)) rows += `<tr><td>${y}</td><td class="n">${usd(eU * y * 12)}</td><td class="n">${usd(cU * y * 12)}</td><td class="n" style="color:var(--good)">${usd(tot - (eU + cU) * y * 12)}</td><td class="n"><b>${usd(tot)}</b></td><td class="n">${usd(g.bE + g.bC * f)}</td></tr>`;
+  }
+  $('pTab').innerHTML = rows;
+  // gráfico simple: barras de valor con la parte aportada
+  const W = 640, H = 250, L = 60, Rr = 630, Tt = 14, B = 200, max = Math.max(...pts.map(p => p.tot)) * 1.1 || 1, bw = (Rr - L) / pts.length;
+  const y = v => B - v / max * (B - Tt);
+  let g = '';
+  [0, max / 2, max].forEach(v => { g += `<line x1="${L}" x2="${Rr}" y1="${y(v)}" y2="${y(v)}" stroke="#e2e5ea"/><text x="${L - 6}" y="${y(v) + 4}" font-size="11" fill="#5d6675" text-anchor="end">${usd(v)}</text>`; });
+  pts.forEach((p, i) => { const x = L + i * bw + bw * 0.2, w = bw * 0.6;
+    g += `<rect x="${x}" y="${y(p.tot)}" width="${w}" height="${B - y(p.tot)}" rx="3" fill="#1f6feb"><title>Año ${p.y}: ${usd(p.tot)}</title></rect><rect x="${x}" y="${y(p.ap)}" width="${w}" height="${B - y(p.ap)}" rx="3" fill="#c5c9d0"/>
+      <text x="${x + w / 2}" y="${B + 16}" font-size="11" fill="#5d6675" text-anchor="middle">${p.y}</text>`; });
+  g += `<rect x="${L}" y="${H - 12}" width="10" height="10" fill="#c5c9d0"/><text x="${L + 14}" y="${H - 3}" font-size="11" fill="#5d6675">Lo que se aportó</text><rect x="${L + 130}" y="${H - 12}" width="10" height="10" fill="#1f6feb"/><text x="${L + 144}" y="${H - 3}" font-size="11" fill="#5d6675">Rendimiento acumulado (años 1 a 10)</text>`;
+  $('pChart').innerHTML = g;
+}
+['pS','pP','pM','pT','pR','pTC'].forEach(id => $(id).addEventListener('input', calcP));
+
+route(); calcE(); calcP();
+})();
+</script>
+</body>
+</html>

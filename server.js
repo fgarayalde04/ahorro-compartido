@@ -221,23 +221,61 @@ async function limpiarSimulaciones() {
   for (const v of viejas) await borrarEmpresa(v.id);
 }
 async function crearSimulacion() {
-  const e = await one(`INSERT INTO empresas (nombre, rut, cant_empleados, match, tope, vesting, tc, plan_ok, demo) VALUES ('Empresa de ejemplo S.A.', '—', 120, 1, 15, 3, 40, true, true) RETURNING *`);
+  const e = await one(`INSERT INTO empresas (nombre, rut, cant_empleados, match, tope, vesting, tc, plan_ok, demo) VALUES ('Empresa de ejemplo S.A.', '—', 30, 1, 15, 3, 40, true, true) RETURNING *`);
   const suf = token().slice(0, 10).toLowerCase();
-  const rrhh = await one('INSERT INTO usuarios (email, nombre, hash, rol, empresa_id) VALUES ($1,$2,$3,$4,$5) RETURNING id', [`rrhh-${suf}@simulacion.local`, 'RR.HH. (simulación)', 'sim', 'empresa', e.id]);
+  const rrhh = await one('INSERT INTO usuarios (email, nombre, hash, rol, empresa_id) VALUES ($1,$2,$3,$4,$5) RETURNING id', [`rrhh-${suf}@simulacion.local`, 'Valentina Ruiz (RR.HH.)', 'sim', 'empresa', e.id]);
+  // [nombre, cargo, sueldo, aporte %, fondo, mes de ingreso al plan (desde enero 2025), mes en que pausó o null]; ingreso null = invitado sin adherirse
   const gente = [
-    ['Ana Pérez', 'Analista de documentación', 62000, 4, 'URTH', 'adherido'],
-    ['Martín López', 'Desarrollador', 165000, 6, 'SPY', 'adherido'],
-    ['Camila Rodríguez', 'Coordinadora de operaciones', 98000, 5, 'URTH', 'adherido'],
-    ['Lucía Sosa', 'Ejecutiva comercial', 85000, 0, 'URTH', 'invitado']
+    ['Ana Pérez', 'Analista de documentación', 62000, 4, 'URTH', 0, null],
+    ['Martín López', 'Desarrollador senior', 165000, 6, 'SPY', 0, null],
+    ['Camila Rodríguez', 'Coordinadora de operaciones', 98000, 5, 'URTH', 0, null],
+    ['Diego Fernández', 'Jefe de tráfico', 140000, 8, 'SPY', 0, null],
+    ['Florencia Gómez', 'Analista contable', 78000, 3, 'URTH', 1, null],
+    ['Santiago Núñez', 'Gerente comercial', 260000, 10, 'SPY', 0, null],
+    ['Lucía Sosa', 'Ejecutiva comercial', 85000, 0, 'URTH', null, null],
+    ['Joaquín Romero', 'Analista de datos', 120000, 5, 'SPY', 2, null],
+    ['Paula Díaz', 'Analista de RR.HH.', 70000, 4, 'URTH', 3, null],
+    ['Bruno Silva', 'Administrativo', 55000, 2, 'URTH', 4, null],
+    ['Valentina Castro', 'Asistente de documentación', 48000, 3, 'URTH', 6, null],
+    ['Gonzalo Martínez', 'Administrativo', 52000, 0, 'URTH', null, null],
+    ['Agustina Méndez', 'Diseñadora UX', 110000, 6, 'SPY', 1, null],
+    ['Federico Acosta', 'Desarrollador', 135000, 7, 'SPY', 0, null],
+    ['Mariana Ferreira', 'Jefa de administración', 150000, 5, 'URTH', 0, null],
+    ['Nicolás Cabrera', 'Operador logístico', 46000, 2, 'URTH', 8, null],
+    ['Sofía Benítez', 'Analista de compras', 76000, 4, 'URTH', 5, null],
+    ['Matías Olivera', 'Supervisor de depósito', 88000, 4, 'SPY', 2, 12],
+    ['Carolina Suárez', 'Contadora', 125000, 6, 'URTH', 0, null],
+    ['Tomás Pereira', 'Soporte técnico', 68000, 3, 'SPY', 10, null],
+    ['Julieta Silveira', 'Ejecutiva de cuentas', 92000, 5, 'URTH', 7, null],
+    ['Rodrigo Morales', 'Analista financiero', 115000, 8, 'SPY', 3, null],
+    ['Micaela Torres', 'Recepcionista', 45000, 2, 'URTH', 12, null],
+    ['Emiliano Vega', 'Desarrollador junior', 82000, 4, 'SPY', 14, null],
+    ['Victoria Rivero', 'Gerenta de RR.HH.', 210000, 9, 'URTH', 0, null],
+    ['Ignacio Duarte', 'Analista de calidad', 74000, 3, 'URTH', 9, null],
+    ['Lorena Medina', 'Asistente comercial', 58000, 0, 'URTH', null, null],
+    ['Pablo Rocha', 'Jefe de ventas', 175000, 7, 'SPY', 1, null],
+    ['Gabriela Ortiz', 'Analista de marketing', 86000, 5, 'URTH', 16, null],
+    ['Andrés Correa', 'Chofer', 50000, 3, 'URTH', 18, null]
   ];
+  const ids = [];
   for (const [i, g] of gente.entries()) {
     const mail = `empleado${i + 1}-${suf}@simulacion.local`;
+    const nunca = g[5] === null;
     const em = await one('INSERT INTO empleados (empresa_id, nombre, email, cargo, sueldo, estado, pct, fondo, invite_token, autorizado) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id',
-      [e.id, g[0], mail, g[1], g[2], g[5], g[3], g[4], g[5] === 'invitado' ? token() : null, g[5] === 'adherido' ? new Date() : null]);
-    if (g[5] === 'adherido') await q('INSERT INTO usuarios (email, nombre, hash, rol, empresa_id, empleado_id) VALUES ($1,$2,$3,$4,$5,$6)', [mail, g[0], 'sim', 'empleado', e.id, em.id]);
+      [e.id, g[0], mail, g[1], g[2], 'invitado', g[3], g[4], nunca ? token() : null, nunca ? null : new Date()]);
+    if (!nunca) await q('INSERT INTO usuarios (email, nombre, hash, rol, empresa_id, empleado_id) VALUES ($1,$2,$3,$4,$5,$6)', [mail, g[0], 'sim', 'empleado', e.id, em.id]);
+    ids.push(em.id);
   }
-  const hoy = ym(new Date());
-  for (let p = '2025-01'; p < hoy; p = addMonths(p, 1)) await aprobarCierre(e, p, 40);
+  // historia mes a mes desde enero 2025: cada persona entra al plan en su mes; el mes en curso queda para aprobar
+  const hoy = ym(new Date()), estadoActual = ids.map(() => 'invitado');
+  let k = 0;
+  for (let p = '2025-01'; p < hoy; p = addMonths(p, 1), k++) {
+    for (const [i, g] of gente.entries()) {
+      const est = g[5] === null || k < g[5] ? 'invitado' : (g[6] !== null && k >= g[6]) ? 'pausado' : 'adherido';
+      if (est !== estadoActual[i]) { await q('UPDATE empleados SET estado=$2 WHERE id=$1', [ids[i], est]); estadoActual[i] = est; }
+    }
+    await aprobarCierre(e, p, 40);
+  }
   return rrhh.id;
 }
 app.post('/api/simulacion/iniciar', wrap(async (req, res) => {

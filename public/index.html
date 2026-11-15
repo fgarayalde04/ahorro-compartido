@@ -22,7 +22,7 @@ a{color:inherit}
 .hero .in{max-width:1100px;margin:0 auto;padding:56px 24px 64px;text-align:center}
 .hero h1{font-size:42px;line-height:1.1;margin:0 auto 14px;letter-spacing:-.02em;max-width:780px}
 .hero p{color:#c8d3e6;font-size:18px;margin:0 auto 34px;max-width:680px}
-.pick{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:820px;margin:0 auto;text-align:left}
+.pick{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1040px;margin:0 auto;text-align:left}
 .pick .empc{background:#fff;color:var(--ink);border-radius:18px;padding:24px;box-shadow:0 18px 40px rgba(0,0,0,.25)}
 .pick .empc .two{display:flex;gap:8px;flex-wrap:wrap}.pick .empc .two a{flex:1;display:block;text-align:center;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:9px 6px;font-weight:600;font-size:14px;box-shadow:none;text-decoration:none;white-space:nowrap}.pick .empc .two a.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
 .pick .simc{background:#fff8ee;color:var(--ink);border-radius:18px;padding:24px;border:2px dashed #ffb347}
@@ -65,7 +65,8 @@ section h2.t{font-size:28px;margin:0 0 8px;letter-spacing:-.01em}
   <p>Un beneficio de ahorro con aporte de la empresa, invertido en fondos indexados globales (MSCI World o S&P 500), en una cuenta a nombre de cada empleado.</p>
   <div class="pick">
     <div class="empc"><div class="ic">🏢</div><h2>Soy empresa</h2><p>Mirá a tu equipo, cómo está configurado cada empleado y aprobá los aportes del mes.</p><div class="two"><a href="/simulacion" class="pri">Ingresar</a><a href="/app?registro">Registrar empresa nueva</a></div></div>
-    <a href="/simulacion?empleado"><div class="ic">👤</div><h2>Soy empleado</h2><p>Mirá tu cuenta: saldo, rendimiento, cuánto aporta tu empresa y tus movimientos.</p><span class="go">Entrar →</span></a>
+    <div class="empc"><div class="ic">👤</div><h2>Soy empleado</h2><p>Mirá tu cuenta: saldo, rendimiento, cuánto aporta tu empresa y tus movimientos.</p><div class="two"><a href="/simulacion?empleado" class="pri">Entrar</a></div></div>
+    <div class="simc"><div class="ic">▶</div><h2>Simulá</h2><p>Cargá tus números y mirá cuánto costaría para tu empresa o cuánto ahorrarías vos. No se guarda nada.</p><div class="two"><a href="/simulador#empresa">Como empresa</a><a href="/simulador#empleado">Como empleado</a></div></div>
   </div>
 </div></div>
 

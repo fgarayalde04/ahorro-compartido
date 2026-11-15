@@ -133,7 +133,7 @@ async function boot(){
 $('logout').onclick = async () => { if (ME.empresa?.simulacion){ await api('POST', '/api/simulacion/salir'); location.href = '/'; return; } await api('POST', '/api/auth/logout'); location.href = '/app'; };
 async function simBar(){
   const bar = $('simbar');
-  if (!ME.empresa?.simulacion){ bar.classList.add('hide'); return; }
+  bar.classList.add('hide'); return;
   const d = await api('GET', '/api/simulacion/perfiles');
   bar.innerHTML = `<span class="tag">SIMULACIÓN</span><span>Empresa y personas de ejemplo, separadas de las cuentas reales. Se borra sola en 24 h. Ver como:</span>
     ${d.perfiles.map(p => `<button data-u="${p.id}" class="${p.id === d.actual ? 'on' : ''}">${esc(p.nombre)}</button>`).join('')}
