@@ -163,7 +163,6 @@ function authView(){
       <label class="f"><b>Contraseña (mínimo 8 caracteres)</b><input type="password" id="rPass" autocomplete="new-password"></label>
       <button class="btn block" id="go">Crear cuenta y configurar el plan</button>`}
     <p class="note" id="err" style="color:var(--bad);margin-top:10px"></p></div>
-    ${AUTHTAB === 'login' ? `<a class="btn sec block" href="/simulacion${QUIEN === 'empleado' ? '?empleado' : ''}" style="margin-bottom:14px;border:2px dashed #ffb347;background:#fff8ee">Ver un ejemplo sin registrarme${QUIEN === 'empleado' ? ' (cuenta de un empleado)' : QUIEN === 'empresa' ? ' (portal de una empresa)' : ''}</a>` : ''}
     <p class="note" style="text-align:center">MVP de un proyecto de Nuevos Emprendimientos · Universidad ORT Uruguay</p></div>`;
   root.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { AUTHTAB = b.dataset.t; authView(); });
   $('go').onclick = async () => {
