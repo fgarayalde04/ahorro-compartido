@@ -118,8 +118,8 @@ async function boot(){
   $('who').textContent = ME.usuario ? ME.usuario.nombre + (ME.empresa ? ' · ' + ME.empresa.nombre : '') : '';
   $('logout').classList.toggle('hide', !ME.usuario);
   if (inv && !ME.usuario) return invitation(inv[1]);
+  if (inv) return invitationLoggedIn(inv[1]);
   if (!ME.usuario) return authView();
-  if (inv) history.replaceState(null, '', '/app');
   if (ME.usuario.rol === 'empresa') return ME.empresa.planOk ? portal() : planSetup(true);
   return employee();
 }
@@ -156,6 +156,14 @@ function authView(){
   root.querySelectorAll('input').forEach(i => i.onkeydown = e => { if (e.key === 'Enter') $('go').click(); });
 }
 
+function invitationLoggedIn(t){
+  root.innerHTML = `<div class="auth"><div class="card"><h1>Tenés una invitación</h1>
+    <p class="sub">Ahora estás con la sesión de <b>${esc(ME.usuario.nombre)}</b> (${esc(ME.usuario.email)}). Para aceptar la invitación como empleado, cerrá esta sesión.</p>
+    <button class="btn block" id="sw">Cerrar sesión y aceptar la invitación</button>
+    <button class="btn sec block" id="st" style="margin-top:8px">Seguir como ${esc(ME.usuario.nombre)}</button></div></div>`;
+  $('sw').onclick = async () => { await api('POST', '/api/auth/logout'); boot(); };
+  $('st').onclick = () => { history.replaceState(null, '', '/app'); boot(); };
+}
 async function invitation(t){
   let inv; try { inv = await api('GET', '/api/invitacion/' + t); } catch(e){ root.innerHTML = `<div class="auth"><div class="card"><h1>Invitación no válida</h1><p class="sub">${esc(e.message)}</p><a class="btn" href="/app">Ir a ingresar</a></div></div>`; return; }
   root.innerHTML = `<div class="auth"><div class="card">
