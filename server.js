@@ -175,17 +175,13 @@ app.get('/api/empresa/cierre', auth('empresa'), wrap(async (req, res) => {
     uyuEmpleado: +x.sueldo * +x.pct / 100, uyuEmpresa: +x.sueldo * coPct(x, e) / 100 })) });
 }));
 
-app.post('/api/empresa/cierre', auth('empresa'), wrap(async (req, res) => {
-  const b = req.body || {}, periodo = String(b.periodo || '');
-  if (!/^\d{4}-\d{2}$/.test(periodo) || periodo > ym(new Date())) return res.status(400).json({ error: 'Período inválido' });
-  const e = await one('SELECT * FROM empresas WHERE id=$1', [req.user.empresa_id]);
-  if (await one('SELECT id FROM cierres WHERE empresa_id=$1 AND periodo=$2', [e.id, periodo])) return res.status(409).json({ error: 'Ese mes ya fue aprobado' });
-  const tc = num(b.tc, 1, 1000, +e.tc);
+async function aprobarCierre(e, periodo, tc, manuales = {}) {
+  if (await one('SELECT id FROM cierres WHERE empresa_id=$1 AND periodo=$2', [e.id, periodo])) return { status: 409, error: 'Ese mes ya fue aprobado' };
   const emps = await q(`SELECT * FROM empleados WHERE empresa_id=$1 AND estado='adherido'`, [e.id]);
-  if (!emps.length) return res.status(400).json({ error: 'No hay empleados adheridos' });
+  if (!emps.length) return { status: 400, error: 'No hay empleados adheridos' };
   const precios = {};
-  for (const t of Object.keys(FONDOS)) { const manual = Number(b.precios?.[t]); precios[t] = manual > 0 ? manual : await precioPeriodo(t, periodo); }
-  for (const x of emps) if (!(precios[x.fondo] > 0)) return res.status(400).json({ error: `Falta el precio de ${x.fondo} para ${periodo}. Ingresalo a mano.` });
+  for (const t of Object.keys(FONDOS)) { const m = Number(manuales[t]); precios[t] = m > 0 ? m : await precioPeriodo(t, periodo); }
+  for (const x of emps) if (!(precios[x.fondo] > 0)) return { status: 400, error: `Falta el precio de ${x.fondo} para ${periodo}. Ingresalo a mano.` };
   let totU = 0, totD = 0;
   const c = await one('INSERT INTO cierres (empresa_id, periodo, tc) VALUES ($1,$2,$3) RETURNING id', [e.id, periodo, tc]);
   for (const x of emps) {
@@ -196,7 +192,16 @@ app.post('/api/empresa/cierre', auth('empresa'), wrap(async (req, res) => {
   }
   await q('UPDATE cierres SET total_uyu=$2, total_usd=$3 WHERE id=$1', [c.id, totU, totD]);
   await q('UPDATE empresas SET tc=$2 WHERE id=$1', [e.id, tc]);
-  res.json({ ok: true, totalUyu: totU, totalUsd: totD, personas: emps.length });
+  return { ok: true, totalUyu: totU, totalUsd: totD, personas: emps.length };
+}
+
+app.post('/api/empresa/cierre', auth('empresa'), wrap(async (req, res) => {
+  const b = req.body || {}, periodo = String(b.periodo || '');
+  if (!/^\d{4}-\d{2}$/.test(periodo) || periodo > ym(new Date())) return res.status(400).json({ error: 'Período inválido' });
+  const e = await one('SELECT * FROM empresas WHERE id=$1', [req.user.empresa_id]);
+  const r = await aprobarCierre(e, periodo, num(b.tc, 1, 1000, +e.tc), b.precios || {});
+  if (r.error) return res.status(r.status).json({ error: r.error });
+  res.json(r);
 }));
 
 app.get('/api/empresa/cierres', auth('empresa'), wrap(async (req, res) => {

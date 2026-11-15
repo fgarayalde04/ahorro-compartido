@@ -330,6 +330,10 @@ function eCuenta(){
   const varPer = RANGE === 'todo' ? last.valor - last.aportado : last.valor - first.valor - dep;
   const lm = P.length > 1 ? P[P.length - 2] : null, lmDep = lm ? last.aportado - lm.aportado : 0, lmR = lm && lm.valor ? (last.valor - lm.valor - lmDep) / lm.valor : null;
   const pxs = Object.entries(k.cuotas);
+  // rendimiento del fondo (ponderado por tiempo): lo que rindió US$ 1 invertido el primer mes
+  let twr = 1; for (let i = 1; i < P.length; i++){ const dep = P[i].aportado - P[i - 1].aportado; if (P[i - 1].valor > 0) twr *= (P[i].valor - dep) / P[i - 1].valor; }
+  twr = P.length > 1 ? twr - 1 : null;
+  const anios = Math.max(1, P.length - 1) / 12;
   $('ec').innerHTML = `<h1>Mi cuenta</h1>
     <div class="note" style="margin-top:8px">Valor de la cuenta</div><div class="big">${usd(k.valor)}</div>
     <div style="font-size:13px;font-weight:600;color:${col(varPer)}">${varPer >= 0 ? '▲' : '▼'} ${usd(Math.abs(varPer))} ${RANGE === 'todo' ? 'desde el inicio' : RANGE === '1a' ? 'en el último año' : 'en los últimos 6 meses'} <span class="note" style="font-weight:400">(sin contar aportes)</span></div>
@@ -339,8 +343,8 @@ function eCuenta(){
     <div class="leg"><span style="--c:#1f6feb">Valor de la cuenta</span><span style="--c:#c5c9d0">Lo que se aportó</span></div>
     <div class="grid2">
       <div class="kpi"><div class="l">Rendimiento anualizado</div><div class="v" style="font-size:19px;color:${col(k.tirAnual ?? 0)}">${sgn(k.tirAnual)}</div><div class="s">TIR desde el inicio</div></div>
-      <div class="kpi"><div class="l">Rendimiento acumulado</div><div class="v" style="font-size:19px;color:${col(k.rendimiento ?? 0)}">${sgn(k.rendimiento)}</div><div class="s">sobre lo aportado</div></div>
-      <div class="kpi"><div class="l">Ganancia total</div><div class="v" style="font-size:19px">${usd(k.ganancia)}</div><div class="s">desde ${per(k.inicio)}</div></div>
+      <div class="kpi"><div class="l">Rendimiento del fondo</div><div class="v" style="font-size:19px;color:${col(twr ?? 0)}">${sgn(twr)}</div><div class="s">desde ${per(k.inicio)} (${anios.toLocaleString('es-UY', {maximumFractionDigits:1})} años)</div></div>
+      <div class="kpi"><div class="l">Ganancia total</div><div class="v" style="font-size:19px">${usd(k.ganancia)}</div><div class="s">${sgn(k.rendimiento)} sobre lo aportado</div></div>
       <div class="kpi"><div class="l">Último mes</div><div class="v" style="font-size:19px;color:${col(lmR ?? 0)}">${sgn(lmR)}</div><div class="s">${per(last.periodo)}</div></div></div>
     <div class="mc"><h3>Tu cartera</h3>${pxs.map(([t, q]) => `<div class="mv"><span><b>${t}</b><small>${esc(C.fondos[t].nombre)}</small></span><span style="text-align:right"><b>${usd(q * C.precios[t].actual)}</b><small>${q.toFixed(4)} cuotas × ${usd(C.precios[t].actual)}</small></span></div>`).join('')}
       <p class="note" style="margin:6px 0 0">Precio de mercado${C.precios[pxs[0][0]].actualizado ? ' al ' + new Date(C.precios[pxs[0][0]].actualizado).toLocaleString('es-UY') : ''} · fuente Yahoo Finance.</p></div>
@@ -349,6 +353,7 @@ function eCuenta(){
       <div class="mv"><span>Rendimiento</span><b style="color:${col(k.ganancia)}">${usd(k.ganancia)}</b></div><div class="mv"><span><b>Valor de la cuenta</b></span><b>${usd(k.valor)}</b></div>
       <div class="mv"><span>Si te vas hoy te llevás</span><b>${usd(k.siTeVas)}</b></div></div>
     <div class="mc"><h3>Datos de la cuenta</h3><div class="mv"><span>Inicio</span><span>${per(k.inicio)}</span></div><div class="mv"><span>Meses con aportes</span><span>${k.meses}</span></div><div class="mv"><span>Custodio</span><span>Interactive Brokers</span></div></div>
+    <p class="note"><b>Cómo leer los rendimientos.</b> El <b>rendimiento del fondo</b> es lo que rindió un dólar invertido el primer mes. El <b>anualizado</b> es ese rendimiento llevado a un año, considerando cuándo entró cada aporte. La <b>ganancia sobre lo aportado</b> es menor porque los aportes entran mes a mes: los últimos llevan poco tiempo invertidos.</p>
     <p class="note">Valores en dólares. Rendimientos pasados no garantizan rendimientos futuros.</p>`;
   $('ec').querySelectorAll('[data-r]').forEach(b => b.onclick = () => { RANGE = b.dataset.r; eCuenta(); });
 }
