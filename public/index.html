@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ahorro Compartido · Para empleados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#121620;--muted:#5d6675;--line:#e2e5ea;--accent:#1f6feb;--accent-soft:#e9f1fe;--good:#167a48;--good-soft:#e5f3ec;--bg:#f4f5f7}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+.wrap{max-width:480px;margin:0 auto;min-height:100vh;background:#fff;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:8px;padding:16px 20px;font-weight:700}
+header i{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-style:normal;font-size:14px}
+header .prog{margin-left:auto;display:flex;gap:4px}
+header .prog b{width:22px;height:4px;border-radius:2px;background:var(--line)}
+header .prog b.on{background:var(--accent)}
+main{flex:1;padding:4px 20px 24px}
+h1{font-size:28px;line-height:1.15;margin:12px 0 10px;letter-spacing:-.02em}
+h2{font-size:21px;line-height:1.25;margin:8px 0 6px}
+p{margin:0 0 12px}
+.muted{color:var(--muted)}.small{font-size:12px}
+.card{border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.hero{background:linear-gradient(160deg,#0f1724,#1d3561);color:#fff;border-radius:20px;padding:22px;margin:6px 0 14px}
+.hero .k{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.hero p{color:#c8d3e6;margin:8px 0 0}
+.li{display:flex;gap:10px;padding:8px 0}.li span{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:700}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;background:var(--accent);color:#fff;border:0;border-radius:12px;padding:14px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;margin-top:10px}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.wa{background:#1f9d55}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);border-radius:12px;background:#fff;padding:12px 14px;margin-top:8px;font:inherit;cursor:pointer}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt b{display:block}.opt small{color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);border-radius:999px;background:#fff;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
+.chip.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chip .n{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;margin-right:4px}
+.big{font-size:34px;font-weight:800;letter-spacing:-.02em;text-align:center}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=text]{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.proj{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.proj div{background:var(--good-soft);border-radius:12px;padding:12px}
+.proj b{display:block;font-size:20px;color:var(--good)}
+.q{font-weight:600;margin:18px 0 4px}
+.disc{background:#fff6e8;color:#7a4a08;border-radius:12px;padding:10px 12px;font-size:12px;margin-top:14px}
+pre{white-space:pre-wrap;background:#f6f7f9;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:12px}
+.hide{display:none!important}
+footer{padding:14px 20px 22px;font-size:11px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><i>◎</i>Ahorro Compartido<div class="prog" id="prog"></div></header>
+  <main id="m"></main>
+  <footer><a href="/demo" style="color:inherit">Ver el prototipo del producto</a> · Proyecto de estudiantes de Nuevos Emprendimientos · Universidad ORT Uruguay · 2026</footer>
+</div>
+<script>
+(function(){
+// ===== Configuración del equipo =====
+// Cada empresa recibe su link con un código (ej.: #isl, #prometeo, #blend). El código solo identifica de dónde viene la respuesta; no se muestra.
+const TC = 40, R = 0.10; // tipo de cambio de referencia y rendimiento anual histórico aproximado del índice
+// ====================================
+const code = (location.hash || '').slice(1).toLowerCase() || 'general';
+const coName = 'tu empresa';
+const $ = id => document.getElementById(id);
+const money = v => '$' + Math.round(v).toLocaleString('es-UY');
+const usd0 = v => 'US$ ' + Math.round(v).toLocaleString('es-UY');
+const S = {contact:'', sent:false, step:0, sal:70000, pct:4, fund:'', join:'', why:'', rank:[], cash:'', name:''};
+const WHY = ['Prefiero cobrar todo en efectivo','Hoy no me alcanza para ahorrar','No confío en invertir','No lo entiendo bien','Pienso cambiar de trabajo pronto','Otro motivo'];
+const BEN = ['Seguro médico','Home office / flexibilidad','Ahorro con aporte de la empresa','Gimnasio','Tickets de alimentación','Capacitación'];
+const coAdd = () => S.sal * Math.min(S.pct * 1, 15) / 100;
+function fv(monthlyUSD, years){ const i = Math.pow(1 + R, 1/12) - 1, n = years * 12; return monthlyUSD * ((Math.pow(1 + i, n) - 1) / i); }
+function prog(){ $('prog').innerHTML = [0,1,2,3,4].map(i => `<b class="${i <= S.step ? 'on' : ''}"></b>`).join(''); }
+function go(n){ S.step = n; render(); window.scrollTo(0, 0); }
+function render(){
+  prog(); const m = $('m');
+  if (S.step === 0){
+    m.innerHTML = `<h1>Ahorrá en dólares y que ${coName === 'tu empresa' ? 'tu empresa' : esc(coName)} ponga una parte</h1>
+      <div class="hero"><div class="k">+ $1</div><p>por cada $1 que ahorres: tu empresa iguala lo que ponés, hasta el 15% de tu sueldo. Todo invertido en fondos globales.</p></div>
+      <div class="li"><span>1</span><div>Elegís cuánto ahorrar por mes y se descuenta de tu sueldo.</div></div>
+      <div class="li"><span>2</span><div>Tu empresa suma su parte, y todo se invierte en un fondo indexado global (MSCI World o S&P 500).</div></div>
+      <div class="li"><span>3</span><div>La plata está en una cuenta a tu nombre. Seguís tu saldo desde el celular.</div></div>
+      <button class="btn" id="n">Calcular cuánto ahorraría</button>
+      <p class="muted small" style="text-align:center;margin-top:8px">Son 2 minutos y 5 preguntas.</p>
+      <div class="disc">Somos estudiantes y estamos validando la idea: esto todavía no es una oferta real y no se cobra nada. Tus respuestas son anónimas salvo que dejes tu nombre.</div>`;
+    $('n').onclick = () => { try { post('/api/visita', {codigo: code, paso: 'inicio'}); } catch(e){} go(1); };
+  } else if (S.step === 1){
+    const e = S.sal * S.pct / 100, c = coAdd(), mUSD = (e + c) / TC;
+    const v5 = fv(mUSD, 5), v10 = fv(mUSD, 10), solo10 = fv(e / TC, 10);
+    m.innerHTML = `<h2>¿Cuánto ganás por mes (nominal)?</h2>
+      <input type="text" inputmode="numeric" id="sal" value="${S.sal.toLocaleString('es-UY')}" style="font-size:22px;font-weight:700" aria-label="Sueldo nominal en pesos">
+      <p class="muted small" style="margin-top:6px">En pesos, antes de descuentos. Solo se usa para el cálculo.</p>
+      <p class="q">¿Cuánto ahorrarías por mes?</p>
+      <div class="card" style="margin-top:6px"><div class="big">${S.pct}%</div><p class="muted" style="text-align:center;margin:0">de tu sueldo · ${money(e)} por mes</p>
+      <input type="range" id="pct" min="1" max="15" step="1" value="${S.pct}"></div>
+      <div class="card"><div class="row"><span>Vos ponés</span><b>${money(e)}</b></div><div class="row"><span>Tu empresa suma</span><b style="color:var(--accent)">+ ${money(c)}</b></div><div class="row"><span>Se invierte por mes</span><b>${money(e + c)} ≈ ${usd0(mUSD)}</b></div></div>
+      <p class="q">Si lo mantenés, con el rendimiento histórico del índice (~10% anual):</p>
+      <div class="proj"><div>En 5 años<b>${usd0(v5)}</b></div><div>En 10 años<b>${usd0(v10)}</b></div></div>
+      <p class="muted small" style="margin-top:8px">Ahorrando solo, sin el aporte de la empresa, en 10 años tendrías ${usd0(solo10)}. Rendimientos pasados no garantizan rendimientos futuros.</p>
+      <button class="btn" id="n">Continuar</button>`;
+    $('sal').onchange = ev => { const v = +String(ev.target.value).replace(/\D/g, ''); if (v) S.sal = v; render(); };
+    $('pct').oninput = ev => { S.pct = +ev.target.value; render(); };
+    $('n').onclick = () => go(2);
+  } else if (S.step === 2){
+    m.innerHTML = `<h2>¿Dónde te gustaría invertir?</h2>
+      <button class="opt ${S.fund === 'MSCI World' ? 'on' : ''}" data-f="MSCI World"><b>MSCI World</b><small>~1.400 empresas de 23 países desarrollados. Más diversificado.</small></button>
+      <button class="opt ${S.fund === 'S&P 500' ? 'on' : ''}" data-f="S&P 500"><b>S&P 500</b><small>Las 500 empresas más grandes de Estados Unidos.</small></button>
+      <button class="opt ${S.fund === 'No sé' ? 'on' : ''}" data-f="No sé"><b>No sé, que me ayuden a elegir</b><small>Te explicamos las diferencias antes de empezar.</small></button>
+      <button class="btn" id="n" ${S.fund ? '' : 'disabled'}>Continuar</button>`;
+    document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { S.fund = b.dataset.f; render(); });
+    $('n').onclick = () => go(3);
+  } else if (S.step === 3){
+    m.innerHTML = `<h2>Si ${coName === 'tu empresa' ? 'tu empresa' : esc(coName)} lo ofreciera mañana, ¿te sumarías?</h2>
+      ${[['Sí','Sí, me sumaría'],['Tal vez','Tal vez, necesito saber más'],['No','No me sumaría']].map(o => `<button class="opt ${S.join === o[0] ? 'on' : ''}" data-j="${o[0]}"><b>${o[1]}</b></button>`).join('')}
+      <div class="${S.join && S.join !== 'Sí' ? '' : 'hide'}"><p class="q">¿Qué te frena más?</p><div class="chips">${WHY.map(w => `<button class="chip ${S.why === w ? 'on' : ''}" data-w="${w}">${w}</button>`).join('')}</div></div>
+      <p class="q">Si en vez de esto te dieran el mismo dinero como aumento de sueldo, ¿qué preferís?</p>
+      <div class="chips">${['El aumento en efectivo','El ahorro con aporte de la empresa','Me da igual'].map(w => `<button class="chip ${S.cash === w ? 'on' : ''}" data-c="${w}">${w}</button>`).join('')}</div>
+      <button class="btn" id="n" ${S.join && S.cash && (S.join === 'Sí' || S.why) ? '' : 'disabled'}>Continuar</button>`;
+    document.querySelectorAll('[data-j]').forEach(b => b.onclick = () => { S.join = b.dataset.j; if (S.join === 'Sí') S.why = ''; render(); });
+    document.querySelectorAll('[data-w]').forEach(b => b.onclick = () => { S.why = b.dataset.w; render(); });
+    document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { S.cash = b.dataset.c; render(); });
+    $('n').onclick = () => go(4);
+  } else if (S.step === 4){
+    m.innerHTML = `<h2>Última: ¿qué beneficios elegirías primero?</h2><p class="muted">Tocá dos, en orden de preferencia.</p>
+      <div class="chips">${BEN.map(w => { const k = S.rank.indexOf(w); return `<button class="chip ${k >= 0 ? 'on' : ''}" data-b="${w}">${k >= 0 ? `<span class="n">${k + 1}</span>` : ''}${w}</button>`; }).join('')}</div>
+      <p class="q">Tu nombre y un mail o celular (opcional)</p><input type="text" id="nm" placeholder="Nombre" value="${esc(S.name)}" style="margin-bottom:8px"><input type="text" id="ct" placeholder="Mail o celular, solo si querés sumarte al piloto" value="${esc(S.contact || '')}">
+      <button class="btn" id="n" ${S.rank.length === 2 ? '' : 'disabled'}>Enviar mis respuestas</button>`;
+    document.querySelectorAll('[data-b]').forEach(b => b.onclick = () => { const w = b.dataset.b, k = S.rank.indexOf(w); if (k >= 0) S.rank.splice(k, 1); else if (S.rank.length < 2) S.rank.push(w); S.name = $('nm').value; render(); });
+    $('nm').oninput = ev => S.name = ev.target.value;
+    $('ct').oninput = ev => S.contact = ev.target.value;
+    $('n').onclick = async () => {
+      $('n').disabled = true; $('n').textContent = 'Enviando…';
+      try {
+        const r = await post('/api/respuestas', {codigo: code, sumaria: S.join, motivo: S.why, aporte: S.pct, sueldo: S.sal, fondo: S.fund, efectivo: S.cash, ben1: S.rank[0], ben2: S.rank[1], nombre: S.name, contacto: S.contact});
+        S.sent = r.ok;
+      } catch(e){ S.sent = false; }
+      go(5);
+    };
+  } else {
+    m.innerHTML = S.sent ? `<div style="text-align:center;padding-top:30px"><div style="font-size:48px">✓</div>
+      <h2>${S.join === 'Sí' ? '¡Gracias! Te anotamos para el piloto' : '¡Gracias por responder!'}</h2>
+      <p class="muted">${S.join === 'Sí' && S.contact ? 'Te vamos a escribir cuando arranque el piloto en tu empresa.' : 'Tus respuestas nos ayudan a diseñar el beneficio.'}</p>
+      <a class="btn sec" href="/demo#empleado">Ver cómo sería la app</a></div>`
+      : `<h2>No pudimos enviar tus respuestas</h2><p class="muted">Revisá tu conexión e intentá de nuevo.</p><pre>${esc(summary())}</pre><button class="btn" id="rt">Reintentar</button>`;
+    const rt = $('rt'); if (rt) rt.onclick = () => go(4);
+  }
+}
+function summary(){
+  const salLabel = money(S.sal);
+  return `Ahorro Compartido · respuesta [${code}]
+¿Se sumaría?: ${S.join}${S.why ? ' (' + S.why + ')' : ''}
+Aporte elegido: ${S.pct}% · sueldo ${salLabel}
+Invertiría en: ${S.fund}
+Efectivo vs. beneficio: ${S.cash}
+Beneficios: 1) ${S.rank[0]} 2) ${S.rank[1]}${S.name ? '\nNombre: ' + S.name : ''}`;
+}
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const post = (url, body) => fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+try { post('/api/visita', {codigo: code}); } catch(e){}
+render();
+})();
+</script>
+</body>
+</html>

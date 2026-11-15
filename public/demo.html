@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ahorro Compartido · MVP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#121620;--muted:#5d6675;--line:#e2e5ea;--accent:#1f6feb;--accent-soft:#e9f1fe;--good:#167a48;--good-soft:#e5f3ec;--warn:#8a4b00;--warn-soft:#fff3e2;--bad:#b42318;--bad-soft:#fdecea;--grey:#c5c9d0;--r:12px}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+button{font:inherit;cursor:pointer}
+.top{display:flex;align-items:center;gap:16px;padding:12px 20px;background:#0f1724;color:#fff;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px}
+.logo i{width:26px;height:26px;border-radius:8px;background:var(--accent);display:grid;place-items:center;font-style:normal;font-size:14px}
+.switch{display:flex;background:#1d2738;border-radius:10px;padding:3px;gap:3px}
+.switch button{border:0;background:transparent;color:#aeb7c6;padding:7px 12px;border-radius:8px;font-weight:500;white-space:nowrap}
+.switch button.on{background:#fff;color:#0f1724}
+.top .sp{flex:1}
+.proto{font-size:11px;color:#f5c88a;border:1px solid #6b4a1c;border-radius:999px;padding:2px 8px}
+.top .reset{border:1px solid #3a475c;background:transparent;color:#cfd6e2;border-radius:8px;padding:6px 10px;font-size:12px}
+.view{display:none}.view.on{display:block}
+/* portal */
+.portal{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 52px)}
+@media(max-width:820px){.portal{grid-template-columns:1fr}.side{display:flex;overflow-x:auto}}
+.side{background:#fff;border-right:1px solid var(--line);padding:16px 10px}
+.side .co{padding:6px 10px 14px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.side .co b{display:block}.side .co span{font-size:12px;color:var(--muted)}
+.side a{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:500;cursor:pointer;white-space:nowrap}
+.side a.on{background:var(--accent-soft);color:var(--accent)}
+.side a .badge{margin-left:auto;background:var(--bad);color:#fff;border-radius:999px;font-size:11px;padding:0 6px}
+.content{padding:24px 28px;max-width:1040px}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.kpi .l{font-size:12px;color:var(--muted)}.kpi .v{font-size:22px;font-weight:700;margin-top:2px}.kpi .s{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.p-good{background:var(--good-soft);color:var(--good)}.p-warn{background:var(--warn-soft);color:var(--warn)}.p-grey{background:#eef0f3;color:var(--muted)}.p-blue{background:var(--accent-soft);color:var(--accent)}.p-bad{background:var(--bad-soft);color:var(--bad)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:#fff;border:0;border-radius:9px;padding:10px 16px;font-weight:600}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.block{width:100%}
+label.f{display:block;margin-bottom:14px;color:var(--muted);font-size:13px}
+label.f b{display:flex;justify-content:space-between;color:var(--ink);font-weight:600;font-size:14px;margin-bottom:5px}
+label.f b output{color:var(--accent)}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:64px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.opt{border:1.5px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;background:#fff;text-align:left}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt b{display:block;margin-bottom:2px}.opt span{font-size:12px;color:var(--muted)}
+.opt[disabled]{opacity:.5;cursor:not-allowed}
+.steps{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.steps div{flex:1;min-width:140px;padding:8px 10px;border-radius:8px;background:#eef0f3;color:var(--muted);font-size:12px;font-weight:600}
+.steps div.on{background:var(--accent);color:#fff}.steps div.done{background:var(--good-soft);color:var(--good)}
+.two{display:grid;grid-template-columns:1fr 320px;gap:16px}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.note{font-size:12px;color:var(--muted)}
+.callout{padding:12px 14px;border-radius:10px;background:var(--accent-soft);color:#173b7a;font-size:13px;margin-bottom:14px}
+.callout.warn{background:var(--warn-soft);color:var(--warn)}
+.callout.good{background:var(--good-soft);color:var(--good)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>.grow{flex:1}
+.empty{color:var(--muted);text-align:center;padding:26px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:130px;padding-top:10px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:11px;color:var(--muted)}
+.bars i{display:block;width:100%;max-width:46px;border-radius:5px 5px 0 0;background:var(--accent)}
+.modal{position:fixed;inset:0;background:rgba(15,23,36,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal.on{display:flex}
+.modal .box{background:#fff;border-radius:14px;max-width:640px;width:100%;max-height:85vh;overflow:auto;padding:20px}
+pre{background:#f6f7f9;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;overflow:auto;white-space:pre}
+/* phone */
+.stage{display:flex;gap:28px;justify-content:center;padding:28px 20px;flex-wrap:wrap}
+.phone{width:375px;height:740px;border-radius:40px;background:#0f1724;padding:12px;box-shadow:0 18px 50px rgba(15,23,36,.25);flex-shrink:0}
+.screen{background:#f7f8fa;border-radius:30px;height:100%;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.sbar{display:flex;justify-content:space-between;padding:12px 22px 6px;font-size:12px;font-weight:600}
+.scroll{flex:1;overflow-y:auto;padding:6px 18px 18px}
+.tabbar{display:flex;border-top:1px solid var(--line);background:#fff}
+.tabbar button{flex:1;border:0;background:none;padding:10px 0 14px;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabbar button.on{color:var(--accent);font-weight:600}
+.tabbar span{font-size:18px}
+.hello{font-size:13px;color:var(--muted);margin-top:4px}
+.big{font-size:32px;font-weight:700;letter-spacing:-.02em}
+.mc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px}
+.mc h3{margin:0 0 8px;font-size:14px}
+.stack{height:12px;border-radius:6px;overflow:hidden;display:flex;background:var(--line);margin:10px 0}
+.stack i{height:100%}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.leg span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--c);margin-right:4px;vertical-align:-1px}
+.mv{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.mv:last-child{border:0}
+.mv small{display:block;color:var(--muted);font-size:11px}
+.side-note{max-width:300px;font-size:13px;color:var(--muted)}
+.side-note h3{color:var(--ink);font-size:15px;margin:0 0 8px}
+.side-note ol{padding-left:18px;margin:8px 0}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:10px 0}
+.check input{margin-top:3px}
+.hide{display:none!important}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f1724;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:30}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo"><i>◎</i>Ahorro Compartido</div>
+  <div class="switch" id="sw">
+    <button data-v="empresa">Portal de la empresa</button>
+    <button data-v="empleado">App del empleado</button>
+  </div>
+  <div class="sp"></div>
+  <span class="proto">Prototipo · datos ficticios</span>
+  <a class="reset" href="/" style="text-decoration:none">Landing empleados</a>
+  <button class="reset" id="reset">Reiniciar demo</button>
+</div>
+
+<!-- ================= PORTAL EMPRESA ================= -->
+<section class="view" id="v-empresa">
+  <div class="portal">
+    <aside class="side" id="side"></aside>
+    <div class="content" id="pc"></div>
+  </div>
+</section>
+
+<!-- ================= APP EMPLEADO ================= -->
+<section class="view" id="v-empleado">
+  <div class="stage">
+    <div class="phone"><div class="screen">
+      <div class="sbar"><span>9:41</span><span>● ● ●</span></div>
+      <div class="scroll" id="app"></div>
+      <div class="tabbar hide" id="tabbar">
+        <button data-t="inicio"><span>⌂</span>Inicio</button>
+        <button data-t="movs"><span>≡</span>Movimientos</button>
+        <button data-t="aporte"><span>%</span>Mi aporte</button>
+        <button data-t="rend"><span>↗</span>Mi cuenta</button>
+        <button data-t="aprender"><span>?</span>Aprender</button>
+      </div>
+    </div></div>
+    <div class="side-note">
+      <h3>Cómo recorrer la demo</h3>
+      <ol>
+        <li>En el <b>Portal de la empresa</b>, activá el plan e invitá a los empleados.</li>
+        <li>Acá, como Ana, aceptá la invitación y elegí tu aporte.</li>
+        <li>Volvé al portal: Ana aparece adherida. En <b>Cierre del mes</b>, aprobá los aportes.</li>
+        <li>En la app de Ana aparece la compra de ETF y su saldo.</li>
+      </ol>
+      <p>La plataforma nunca custodia el dinero: calcula los aportes, prepara los descuentos de la nómina y envía al custodio (Interactive Brokers) la orden de compra de ETF para la subcuenta de cada empleado.</p>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="modal"><div class="box" id="mbox"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const money = v => '$' + Math.round(v).toLocaleString('es-UY');
+const pct = v => (Math.round(v * 100) / 100).toLocaleString('es-UY') + '%';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
+const period = i => MONTHS[i % 12] + ' ' + (2026 + Math.floor(i / 12));
+const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('on'), 2200); };
+
+// ---------------- demo data ----------------
+const TC = 40; // tipo de cambio supuesto UYU por US$
+const usd = v => 'US$ ' + (Math.round(v * 100) / 100).toLocaleString('es-UY', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const usd0 = v => 'US$ ' + Math.round(v).toLocaleString('es-UY');
+const ETF = {
+  world: {name: 'iShares MSCI World ETF', short: 'MSCI World', ticker: 'URTH', desc: '~1.400 empresas grandes de 23 países desarrollados', hist: 'aprox. 9-10% anual en dólares', p0: 150},
+  sp500: {name: 'SPDR S&P 500 ETF', short: 'S&P 500', ticker: 'SPY', desc: 'las 500 empresas más grandes de Estados Unidos', hist: 'aprox. 10% anual en dólares', p0: 600}
+};
+// rendimiento mensual simulado (determinístico): media ~0,8% mensual (~10% anual) con volatilidad
+const RET = (i, f) => (f === 'sp500' ? 0.0100 : 0.0095) + 0.028 * Math.sin(i * 1.3 + (f === 'sp500' ? 0.4 : 0)) + 0.012 * Math.cos(i * 2.1);
+function fresh(){
+  const names = [
+    ['Ana Pérez','Analista de documentación',62000,14],['Bruno Silva','Administrativo',55000,8],['Camila Rodríguez','Coordinadora de operaciones',98000,40],
+    ['Diego Fernández','Jefe de tráfico',140000,72],['Florencia Gómez','Analista contable',78000,26],['Gonzalo Martínez','Administrativo',52000,4],
+    ['Lucía Sosa','Ejecutiva comercial',85000,18],['Martín López','Desarrollador',165000,30],['Paula Díaz','Analista de RR.HH.',70000,11],
+    ['Santiago Núñez','Gerente comercial',230000,96],['Valentina Castro','Asistente de documentación',48000,6],['Joaquín Romero','Analista de datos',120000,20]
+  ];
+  return {
+    company:{name:'Naviera Demo S.A.', rut:'21 000000 0019', employees:120, configured:false, step:1, invited:false,
+      plan:{tipo:'match', match:1, tope:15, fijo:2000, vest:'v3', alcance:'todos', claveIds:[]}, fee:250},
+    period:10, // noviembre 2026
+    people: names.map((n, i) => ({id:'e'+i, name:n[0], role:n[1], salary:n[2], months:n[3], status:'none', pct:0, fund:'world', planMonths:0,
+      own:0, co:0, balOwn:0, balCo:0, units:0, history:[], series:[]})),
+    closes:[], portalTab:'inicio', appTab:'inicio', appStep:0, appPct:4, appFund:'world'
+  };
+}
+let D;
+function load(){ try { const s = localStorage.getItem('ac-demo-v5'); D = s ? JSON.parse(s) : fresh(); } catch(e){ D = fresh(); } }
+function save(){ try { localStorage.setItem('ac-demo-v5', JSON.stringify(D)); } catch(e){} }
+load();
+const SEED = {e2:[5,'world'], e3:[4,'sp500'], e4:[3,'world'], e7:[6,'sp500'], e9:[3,'world'], e11:[5,'sp500']};
+
+// ---------------- plan rules ----------------
+const VEST = {v3:{label:'Vesting 3 años', desc:'El empleado adquiere ⅓ del aporte de la empresa por cada año en el plan.', years:3},
+              v5:{label:'Vesting 5 años', desc:'Adquiere 20% por año. Más retención, pero más largo.', years:5},
+              v0:{label:'Sin vesting', desc:'El aporte de la empresa es del empleado desde el primer día.', years:0}};
+function eligible(p){ return D.company.plan.alcance === 'todos' || D.company.plan.claveIds.includes(p.id); }
+function coPct(p, pctEmp){ const pl = D.company.plan; if (pl.tipo === 'fijo') return p.salary ? pl.fijo / p.salary * 100 : 0; return Math.min((pctEmp ?? p.pct) * pl.match, pl.tope); }
+function planText(){ const pl = D.company.plan; return pl.tipo === 'fijo' ? `${money(pl.fijo)} fijos por mes para cada empleado adherido` : `$${pl.match.toFixed(2)} por cada $1 del empleado, hasta ${pct(pl.tope)} del sueldo`; }
+function vestFrac(months){ const y = VEST[D.company.plan.vest].years; if (!y) return 1; return Math.min(Math.floor(months / 12) / y, 1); }
+function nextVest(p){
+  const y = VEST[D.company.plan.vest].years; if (!y) return null;
+  const done = Math.floor(p.planMonths / 12); if (done >= y) return null;
+  return {when: period(D.period + (done + 1) * 12 - p.planMonths), frac: (done + 1) / y};
+}
+function adhered(){ return D.people.filter(p => p.status === 'adherido'); }
+function monthLines(){ return adhered().map(p => { const e = p.salary * p.pct / 100, c = p.salary * coPct(p) / 100; return {p, e, c}; }); }
+const BPS = 0.126; // cargas patronales estimadas sobre el aporte (a validar)
+
+// ---------------- top switch ----------------
+function setView(v){
+  ['empresa','empleado'].forEach(x => $('v-' + x).classList.toggle('on', x === v));
+  document.querySelectorAll('#sw button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v);
+  render();
+}
+document.querySelectorAll('#sw button').forEach(b => b.addEventListener('click', () => setView(b.dataset.v)));
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (['empresa','empleado'].includes(h)) setView(h); });
+$('reset').addEventListener('click', () => { D = fresh(); save(); render(); toast('Demo reiniciada'); });
+
+// ---------------- portal ----------------
+function renderSide(){
+  const pending = D.company.configured && adhered().length ? 1 : 0;
+  const items = D.company.configured
+    ? [['inicio','⌂ Inicio'],['plan','⚙ Plan'],['empleados','☰ Empleados'],['cierre','✓ Cierre del mes', pending],['reportes','▤ Reportes']]
+    : [['inicio','⚙ Configurar plan']];
+  $('side').innerHTML = `<div class="co"><b>${esc(D.company.name)}</b><span>Portal de RR.HH.</span></div>` +
+    items.map(i => `<a data-pt="${i[0]}" class="${D.portalTab === i[0] ? 'on' : ''}">${i[1]}${i[2] ? '<span class="badge">1</span>' : ''}</a>`).join('');
+  $('side').querySelectorAll('a').forEach(a => a.addEventListener('click', () => { D.portalTab = a.dataset.pt; save(); render(); }));
+}
+function costEstimate(adhesion){
+  const N = D.company.employees, avgSal = D.people.reduce((s, p) => s + p.salary, 0) / D.people.length;
+  const alc = D.company.plan.alcance === 'todos' ? 1 : 0.2;
+  const P = Math.round(N * alc * adhesion);
+  const avgCo = Math.min(4 * D.company.plan.match, D.company.plan.tope);
+  const match = D.company.plan.tipo === 'fijo' ? P * D.company.plan.fijo : P * avgSal * avgCo / 100, cargas = match * BPS, fee = P * D.company.fee;
+  return {P, match, cargas, fee, tot: match + cargas + fee, nomina: N * avgSal};
+}
+function onboarding(){
+  const s = D.company.step, pl = D.company.plan;
+  const steps = ['1. Tu empresa','2. Diseño del plan','3. Contrato y activación'];
+  let h = `<h1>Configurá el beneficio</h1><p class="sub">En tres pasos. Podés cambiar el diseño más adelante.</p>
+    <div class="steps">${steps.map((t, i) => `<div class="${i + 1 === s ? 'on' : i + 1 < s ? 'done' : ''}">${t}</div>`).join('')}</div>`;
+  if (s === 1){
+    h += `<div class="card" style="max-width:560px">
+      <label class="f"><b>Razón social</b><input type="text" id="oName" value="${esc(D.company.name)}"></label>
+      <label class="f"><b>RUT</b><input type="text" id="oRut" value="${esc(D.company.rut)}"></label>
+      <label class="f"><b>Cantidad de empleados</b><input type="number" id="oEmp" value="${D.company.employees}"></label>
+      <label class="f"><b>Sistema de liquidación de sueldos</b><select><option>Planilla propia (Excel / CSV)</option><option>Software de nómina (integración por archivo)</option></select></label>
+      <button class="btn" id="oNext1">Continuar</button></div>`;
+  } else if (s === 2){
+    const ce = costEstimate(0.6);
+    h += `<div class="two"><div>
+      <div class="card"><h2>¿Dónde se invierte el ahorro?</h2><div class="opts">
+        <button class="opt on"><b>Fondos indexados globales (ETF)</b><span>Subcuenta a nombre de cada empleado en Interactive Brokers. El empleado elige MSCI World o S&P 500.</span></button>
+        <button class="opt" disabled><b>Vía AFAP · ahorro voluntario</b><span>Sin cargas BPS, pero sin vesting ni ETF. Próximamente.</span></button></div>
+        <p class="note" style="margin:10px 0 0">Ahorro Compartido no custodia fondos ni decide inversiones: transmite la distribución que eligió cada empleado.</p></div>
+      <div class="card"><h2>¿Cuánto pone la empresa?</h2><div class="opts" style="margin-bottom:14px">
+          <button class="opt ${pl.tipo === 'match' ? 'on' : ''}" data-tipo="match"><b>Acompaña lo que ahorra cada uno</b><span>Por cada $1 del empleado, la empresa pone una parte, con un tope.</span></button>
+          <button class="opt ${pl.tipo === 'fijo' ? 'on' : ''}" data-tipo="fijo"><b>Monto fijo por empleado</b><span>La empresa pone lo mismo cada mes a cada adherido.</span></button></div>
+        ${pl.tipo === 'fijo' ? `<label class="f"><b>Aporte de la empresa por empleado ($ por mes)</b><input type="number" id="pFijo" min="0" step="100" value="${pl.fijo}"></label>` : `
+        <label class="f"><b>Por cada $1 del empleado <output>$${pl.match.toFixed(2)}</output></b><input type="range" id="pMatch" min="0.25" max="1" step="0.25" value="${pl.match}"></label>
+        <label class="f"><b>Tope del aporte de la empresa <output>${pct(pl.tope)} del sueldo</output></b><input type="range" id="pTope" min="1" max="15" step="0.5" value="${pl.tope}"></label>`}</div>
+      <div class="card"><h2>¿Cuándo es del empleado el aporte de la empresa?</h2><div class="opts">
+        ${Object.entries(VEST).map(([k, v]) => `<button class="opt ${pl.vest === k ? 'on' : ''}" data-vest="${k}"><b>${v.label}</b><span>${v.desc}</span></button>`).join('')}</div>
+        <p class="note" style="margin:10px 0 0">Si alguien se va antes, la parte no adquirida vuelve a la empresa. El aporte propio del empleado siempre es suyo.</p></div>
+      <div class="card"><h2>¿A quién alcanza?</h2><div class="opts">
+          <button class="opt ${pl.alcance === 'todos' ? 'on' : ''}" data-alc="todos"><b>Toda la nómina</b><span>Equitativo para todos los niveles.</span></button>
+          <button class="opt ${pl.alcance === 'clave' ? 'on' : ''}" data-alc="clave"><b>Empleados clave</b><span>Elegís a quién. Mayor aporte, menor costo total.</span></button></div></div>
+      </div>
+      <div><div class="card" style="position:sticky;top:16px"><h2>Costo estimado</h2>
+        <p class="note">Con ${ce.P} adheridos (60% de adhesión) y aporte típico del 4% del empleado.</p>
+        <table><tr><td>Aportes de la empresa</td><td class="n">${money(ce.match)}/mes</td></tr>
+        <tr><td>Cargas BPS estimadas*</td><td class="n">${money(ce.cargas)}/mes</td></tr>
+        <tr><td>Servicio Ahorro Compartido</td><td class="n">${money(ce.fee)}/mes</td></tr>
+        <tr class="tot"><td>Total</td><td class="n">${money(ce.tot)}/mes</td></tr></table>
+        <p class="note" style="margin-top:10px">${pct(ce.tot / ce.nomina * 100)} de la nómina · ${money(ce.tot * 12)} al año. Solo pagás por empleado adherido: ${money(D.company.fee)}/mes.</p>
+        <p class="note">*El aporte a una cuenta de inversión podría ser materia gravada (Ley 16.713, art. 153). Estimado, a validar con su contador.</p>
+        <div class="callout" style="margin-top:12px">Sugerencia: empezá con un piloto de 10 a 20 personas durante 3 meses.</div>
+        <div class="row"><button class="btn sec" id="oBack">Atrás</button><button class="btn grow" id="oNext2">Continuar</button></div>
+        <button class="btn sec block" id="askProp" style="margin-top:8px">Pedí la propuesta para tu empresa</button></div></div></div>`;
+  } else {
+    h += `<div class="card" style="max-width:640px"><h2>Resumen del plan</h2>
+      <table><tr><td>Inversión</td><td>ETF globales (MSCI World o S&P 500), elegidos por cada empleado</td></tr>
+      <tr><td>Custodia</td><td>Interactive Brokers · cuenta de la empresa con una subcuenta por empleado</td></tr>
+      <tr><td>Aporte de la empresa</td><td>${planText()}</td></tr>
+      <tr><td>Vesting</td><td>${VEST[pl.vest].label}</td></tr>
+      <tr><td>Alcance</td><td>${pl.alcance === 'todos' ? 'Toda la nómina' : 'Empleados clave'}</td></tr>
+      <tr><td>Precio</td><td>${money(D.company.fee)} por empleado adherido por mes · sin costo fijo durante el piloto</td></tr></table>
+      <div class="check"><input type="checkbox" id="c1"><label for="c1">Acepto el contrato marco. Ahorro Compartido no recibe ni custodia fondos: la empresa transfiere a su cuenta en el custodio y la plataforma envía la orden de distribución.</label></div>
+      <div class="check"><input type="checkbox" id="c2"><label for="c2">Autorizo la apertura de la cuenta de la empresa en Interactive Brokers y de una subcuenta a nombre de cada empleado que se adhiera.</label></div>
+      <div class="row"><button class="btn sec" id="oBack">Atrás</button><button class="btn" id="oAct" disabled>Activar plan</button></div></div>`;
+  }
+  return h;
+}
+function totalUSD(){ return D.people.reduce((s, p) => s + p.balOwn + p.balCo, 0); }
+function portalInicio(){
+  const ad = adhered(), lines = monthLines();
+  const coM = lines.reduce((s, l) => s + l.c, 0), fee = ad.length * D.company.fee;
+  const invitedN = D.people.filter(p => eligible(p) && p.status !== 'none').length;
+  let h = `<h1>Inicio</h1><p class="sub">Período en curso: ${period(D.period)}</p>`;
+  if (!D.company.invited) h += `<div class="callout">El plan está activo. Siguiente paso: <b>invitá a los empleados</b> para que se adhieran desde la app. <button class="btn sm" id="goInvite" style="margin-left:8px">Invitar ahora</button></div>`;
+  else if (ad.length) h += `<div class="callout warn">Tenés el cierre de ${period(D.period)} listo para revisar y aprobar. <button class="btn sm" id="goClose" style="margin-left:8px">Ir al cierre</button></div>`;
+  h += `<div class="kpis">
+    <div class="kpi"><div class="l">Adhesión</div><div class="v">${invitedN ? Math.round(ad.length / invitedN * 100) : 0}%</div><div class="s">${ad.length} de ${invitedN} invitados</div></div>
+    <div class="kpi"><div class="l">Aporte de la empresa este mes</div><div class="v">${money(coM)}</div><div class="s">+ cargas estimadas ${money(coM * BPS)}</div></div>
+    <div class="kpi"><div class="l">Servicio este mes</div><div class="v">${money(fee)}</div><div class="s">${ad.length} × ${money(D.company.fee)}</div></div>
+    <div class="kpi"><div class="l">Patrimonio de tu equipo</div><div class="v">${usd0(totalUSD())}</div><div class="s">${D.closes.length} cierre(s) · invertido en ETF</div></div></div>`;
+  if (D.company.invited) h += `<div class="callout" style="background:#f1f2f4;color:var(--muted)">Demo: <button class="btn sec sm" id="sim24">Simular 24 meses</button> aprueba 24 cierres seguidos con rendimientos simulados de los ETF, para ver cuentas con historia.</div>`;
+  h += `<div class="card"><h2>Actividad reciente</h2>${activity()}</div>`;
+  return h;
+}
+function activity(){
+  const ev = [];
+  D.closes.slice().reverse().forEach(c => ev.push(`Cierre de ${c.period} aprobado · ${money(c.co + c.emp)} (${usd0((c.co + c.emp) / TC)}) invertidos en ${c.n} subcuentas`));
+  adhered().forEach(p => ev.push(`${esc(p.name)} se adhirió con ${pct(p.pct)} · invierte en ${ETF[p.fund].short}`));
+  if (D.company.invited) ev.push(`Invitaciones enviadas a ${D.people.filter(p => p.status !== 'none').length} empleados`);
+  ev.push('Plan activado');
+  return ev.slice(0, 8).map(e => `<div class="mv"><span>${e}</span></div>`).join('');
+}
+function portalEmpleados(){
+  const st = {none:['No invitado','p-grey'], invitado:['Invitado','p-warn'], adherido:['Adherido','p-good'], pausado:['En pausa','p-grey']};
+  let h = `<div class="row"><div class="grow"><h1>Empleados</h1><p class="sub">${D.company.plan.alcance === 'clave' ? 'Marcá a los empleados clave que alcanza el plan.' : 'Todos los empleados están alcanzados por el plan.'}</p></div>
+    <button class="btn sec" id="impCsv">Importar nómina (CSV)</button><button class="btn" id="goInvite2" ${D.company.invited ? 'disabled' : ''}>${D.company.invited ? 'Invitaciones enviadas' : 'Invitar a los alcanzados'}</button></div>
+    <div class="card" style="padding:6px 8px"><table><thead><tr>${D.company.plan.alcance === 'clave' ? '<th>Clave</th>' : ''}<th>Empleado</th><th class="n">Sueldo</th><th>Estado</th><th class="n">Aporta</th><th>Invierte en</th><th class="n">Vesting</th><th class="n">Saldo</th></tr></thead><tbody>`;
+  D.people.forEach(p => {
+    const s = st[p.status], on = p.status === 'adherido';
+    h += `<tr>${D.company.plan.alcance === 'clave' ? `<td><input type="checkbox" data-key="${p.id}" ${D.company.plan.claveIds.includes(p.id) ? 'checked' : ''}></td>` : ''}
+      <td><b>${esc(p.name)}</b><div class="note">${esc(p.role)}</div></td><td class="n"><input type="number" data-sal="${p.id}" value="${p.salary}" step="1000" min="0" style="width:120px;text-align:right"></td>
+      <td><span class="pill ${eligible(p) ? s[1] : 'p-grey'}">${eligible(p) ? s[0] : 'No alcanzado'}</span></td>
+      <td class="n">${on ? pct(p.pct) : '—'}</td><td>${on ? ETF[p.fund].short : '—'}</td><td class="n">${on ? Math.round(vestFrac(p.planMonths) * 100) + '%' : '—'}</td><td class="n">${p.balOwn + p.balCo ? usd0(p.balOwn + p.balCo) : '—'}</td></tr>`;
+  });
+  return h + `</tbody></table></div>
+    <div class="card"><h2>Agregar empleado</h2><div class="row">
+      <input type="text" id="nwName" placeholder="Nombre y apellido" class="grow"><input type="text" id="nwRole" placeholder="Cargo" class="grow">
+      <input type="number" id="nwSal" placeholder="Sueldo nominal ($)" step="1000" style="max-width:190px"><button class="btn" id="nwAdd">Agregar</button></div>
+      <p class="note" style="margin:8px 0 0">El sueldo se usa para calcular el aporte de cada persona. Se puede corregir en la tabla en cualquier momento.</p></div>`;
+}
+function portalCierre(){
+  const lines = monthLines();
+  let h = `<h1>Cierre de ${period(D.period)}</h1><p class="sub">La plataforma toma la nómina del mes, calcula los aportes y arma la orden de inversión de cada subcuenta. Revisá y aprobá.</p>`;
+  if (!lines.length) return h + `<div class="card empty">Todavía no hay empleados adheridos. Invitalos desde Empleados y aceptá la invitación en la app.</div>`;
+  const tE = lines.reduce((s, l) => s + l.e, 0), tC = lines.reduce((s, l) => s + l.c, 0);
+  h += `<div class="card" style="padding:6px 8px"><table><thead><tr><th>Empleado</th><th>ETF</th><th class="n">Aporte empleado</th><th class="n">Aporte empresa</th><th class="n">Total</th><th class="n">En US$</th></tr></thead><tbody>` +
+    lines.map(l => `<tr><td>${esc(l.p.name)}<div class="note">${pct(l.p.pct)} de ${money(l.p.salary)} · empresa ${pct(coPct(l.p))}</div></td><td><b>${ETF[l.p.fund].ticker}</b><div class="note">${ETF[l.p.fund].short}</div></td><td class="n">${money(l.e)}</td><td class="n">${money(l.c)}</td><td class="n">${money(l.e + l.c)}</td><td class="n">${usd(( l.e + l.c) / TC)}</td></tr>`).join('') +
+    `<tr class="tot"><td colspan="2">Total (${lines.length} personas)</td><td class="n">${money(tE)}</td><td class="n">${money(tC)}</td><td class="n">${money(tE + tC)}</td><td class="n">${usd((tE + tC) / TC)}</td></tr></tbody></table></div>
+    <div class="two"><div class="card"><h2>Qué genera la aprobación</h2>
+      <div class="mv"><span>1. Descuentos para la nómina (autorizados por cada empleado)</span><button class="btn sec sm" data-file="nomina">Ver archivo</button></div>
+      <div class="mv"><span>2. Transferencia de la empresa a su cuenta en Interactive Brokers</span><button class="btn sec sm" data-file="transfer">Ver detalle</button></div>
+      <div class="mv"><span>3. Orden de distribución y compra de ETF por subcuenta (vía API)</span><button class="btn sec sm" data-file="orden">Ver orden</button></div>
+      <div class="mv"><span>4. Aviso a cada empleado en la app</span><span class="pill p-blue">Automático</span></div></div>
+      <div class="card"><h2>Total a invertir</h2><div class="big" style="font-size:26px">${usd((tE + tC) / TC)}</div><p class="note">${money(tE + tC)} al tipo de cambio de referencia ($${TC}). La empresa transfiere al custodio; Ahorro Compartido no recibe fondos.</p>
+      <button class="btn block" id="approve">Aprobar cierre de ${period(D.period)}</button></div></div>`;
+  return h;
+}
+function portalReportes(){
+  const ad = adhered(), invited = D.people.filter(p => eligible(p) && p.status !== 'none');
+  const forfeits = D.closes.length ? 0 : 0;
+  let h = `<h1>Reportes</h1><p class="sub">Lo que necesitás para decidir si el beneficio funciona.</p><div class="kpis">
+    <div class="kpi"><div class="l">Tasa de adhesión</div><div class="v">${invited.length ? Math.round(ad.length / invited.length * 100) : 0}%</div></div>
+    <div class="kpi"><div class="l">Aporte promedio del empleado</div><div class="v">${ad.length ? pct(ad.reduce((s, p) => s + p.pct, 0) / ad.length) : '—'}</div></div>
+    <div class="kpi"><div class="l">Costo total acumulado</div><div class="v">${money(D.closes.reduce((s, c) => s + c.co * (1 + BPS) + c.fee, 0))}</div><div class="s">aportes + cargas + servicio</div></div>
+    <div class="kpi"><div class="l">Renuncias entre adheridos</div><div class="v">${forfeits}</div><div class="s">vs. resto de la plantilla</div></div></div>`;
+  const cl = D.closes.slice(-12), max = Math.max(1, ...cl.map(c => c.co + c.emp));
+  h += `<div class="card"><h2>Invertido por mes</h2>${cl.length ? `<div class="bars">${cl.map(c => `<div><span>${usd0((c.co + c.emp) / TC)}</span><i style="height:${(c.co + c.emp) / max * 100}px"></i>${c.period.split(' ')[0].slice(0,3)}</div>`).join('')}</div>` : '<div class="empty">Aprobá el primer cierre para ver el histórico.</div>'}</div>`;
+  const w = ad.filter(p => p.fund === 'world').length;
+  h += `<div class="card"><h2>Elección de inversión</h2><table><tr><td>MSCI World (URTH)</td><td class="n">${w} personas</td></tr><tr><td>S&P 500 (SPY)</td><td class="n">${ad.length - w} personas</td></tr></table></div>`;
+  return h;
+}
+function portalPlan(){
+  const pl = D.company.plan;
+  return `<h1>Plan</h1><p class="sub">Diseño vigente. Los cambios aplican desde el próximo cierre.</p><div class="card" style="max-width:640px"><table>
+    <tr><td>Inversión</td><td>ETF globales (MSCI World o S&P 500) en Interactive Brokers</td></tr>
+    <tr><td>Aporte de la empresa</td><td>${planText()}</td></tr>
+    <tr><td>Vesting</td><td>${VEST[pl.vest].label}</td></tr>
+    <tr><td>Alcance</td><td>${pl.alcance === 'todos' ? 'Toda la nómina' : 'Empleados clave (' + pl.claveIds.length + ')'}</td></tr>
+    <tr><td>Precio</td><td>${money(D.company.fee)} por adherido por mes</td></tr></table>
+    <div class="row" style="margin-top:14px"><button class="btn sec" id="editPlan">Editar diseño</button></div></div>`;
+}
+function renderPortal(){
+  renderSide();
+  const pc = $('pc');
+  if (!D.company.configured){ pc.innerHTML = onboarding(); bindOnboarding(); return; }
+  const t = D.portalTab;
+  pc.innerHTML = t === 'empleados' ? portalEmpleados() : t === 'cierre' ? portalCierre() : t === 'reportes' ? portalReportes() : t === 'plan' ? portalPlan() : portalInicio();
+  bindPortal();
+}
+function bindOnboarding(){
+  const s = D.company.step;
+  if (s === 1) $('oNext1').onclick = () => { D.company.name = $('oName').value || D.company.name; D.company.rut = $('oRut').value; D.company.employees = +$('oEmp').value || 120; D.company.step = 2; save(); render(); };
+  if (s === 2){
+    const pm = $('pMatch'); if (pm) pm.oninput = e => { D.company.plan.match = +e.target.value; save(); render(); };
+    const pt = $('pTope'); if (pt) pt.oninput = e => { D.company.plan.tope = +e.target.value; save(); render(); };
+    const pf = $('pFijo'); if (pf) pf.onchange = e => { D.company.plan.fijo = Math.max(0, +e.target.value || 0); save(); render(); };
+    document.querySelectorAll('[data-tipo]').forEach(b => b.onclick = () => { D.company.plan.tipo = b.dataset.tipo; save(); render(); });
+    document.querySelectorAll('[data-vest]').forEach(b => b.onclick = () => { D.company.plan.vest = b.dataset.vest; save(); render(); });
+    document.querySelectorAll('[data-alc]').forEach(b => b.onclick = () => { D.company.plan.alcance = b.dataset.alc; if (b.dataset.alc === 'clave' && !D.company.plan.claveIds.length) D.company.plan.claveIds = ['e0','e3','e7','e11','e2']; save(); render(); });
+    $('oBack').onclick = () => { D.company.step = 1; save(); render(); };
+    $('oNext2').onclick = () => { D.company.step = 3; save(); render(); };
+    $('askProp').onclick = proposalModal;
+  }
+  if (s === 3){
+    const chk = () => $('oAct').disabled = !($('c1').checked && $('c2').checked);
+    $('c1').onchange = chk; $('c2').onchange = chk;
+    $('oBack').onclick = () => { D.company.step = 2; save(); render(); };
+    $('oAct').onclick = () => { D.company.configured = true; D.portalTab = 'inicio'; save(); render(); toast('Plan activado'); };
+  }
+}
+function invite(){
+  D.company.invited = true;
+  D.people.forEach(p => { if (eligible(p) && p.status === 'none') p.status = 'invitado'; });
+  Object.entries(SEED).forEach(([id, v]) => { const p = D.people.find(x => x.id === id); if (p && eligible(p) && p.status === 'invitado'){ p.status = 'adherido'; p.pct = v[0]; p.fund = v[1]; } });
+  save(); render(); toast('Invitaciones enviadas por mail y WhatsApp');
+}
+function price(fund, i){ let p = ETF[fund].p0; for (let k = 10; k < i; k++) p *= 1 + RET(k, fund); return p; }
+function fileText(kind){
+  const lines = monthLines(), per = period(D.period);
+  if (kind === 'nomina') return 'cedula;nombre;periodo;concepto;importe_uyu\n' + lines.map((l, i) => `1.234.5${i}0-${i};${l.p.name};${per};Ahorro Compartido (descuento autorizado);${Math.round(l.e)}`).join('\n');
+  const tot = lines.reduce((s, l) => s + l.e + l.c, 0);
+  if (kind === 'transfer') return `Ordenante: ${D.company.name} (RUT ${D.company.rut})\nDestino: Interactive Brokers · cuenta de ${D.company.name}\nPeríodo: ${per}\nImporte: ${money(tot)} ≈ ${usd(tot / TC)} (TC ref. ${TC})\nConcepto: Aportes plan de ahorro · ${lines.length} subcuentas`;
+  return 'subcuenta;titular;ticker;importe_usd;precio_ref;cuotas_estimadas\n' + lines.map((l, i) => { const pr = price(l.p.fund, D.period); const u = (l.e + l.c) / TC; return `U${8800100 + i};${l.p.name};${ETF[l.p.fund].ticker};${u.toFixed(2)};${pr.toFixed(2)};${(u / pr).toFixed(4)}`; }).join('\n');
+}
+function proposalModal(){
+  const pl = D.company.plan, ce = costEstimate(0.6);
+  openModal(`<h2>Pedí la propuesta para tu empresa</h2><p class="note">Te armamos el plan con tus números y una propuesta de piloto. Sin compromiso.</p>
+    <label class="f"><b>Empresa</b><input type="text" id="pqCo" placeholder="Nombre de la empresa"></label>
+    <label class="f"><b>Tu nombre y rol</b><input type="text" id="pqWho" placeholder="Ej.: María, Head of HR"></label>
+    <label class="f"><b>Mail o celular</b><input type="text" id="pqMail" placeholder="Para enviarte la propuesta"></label>
+    <label class="f"><b>¿Qué querés recibir?</b><select id="pqWhat"><option>Propuesta de piloto para 10 a 20 personas</option><option>Presentación para el directorio</option><option>Solo más información</option></select></label>
+    <div class="row"><button class="btn" id="pqSend">Pedir propuesta</button><button class="btn sec" data-close>Cancelar</button></div>`);
+  $('pqSend').onclick = async () => {
+    if (!$('pqCo').value.trim()){ toast('Completá el nombre de la empresa'); return; }
+    $('pqSend').disabled = true;
+    const body = {empresa: $('pqCo').value, contacto: $('pqWho').value, email: $('pqMail').value, quiere: $('pqWhat').value,
+      plan: planText() + ' · ' + VEST[pl.vest].label + ' · ' + (pl.alcance === 'todos' ? 'toda la nómina' : 'empleados clave'), empleados: D.company.employees, costo: money(ce.tot) + '/mes'};
+    let ok = false;
+    try { const r = await fetch('/api/propuestas', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}); ok = r.ok; } catch(e){}
+    $('mbox').innerHTML = ok ? `<h2>¡Listo!</h2><p>Recibimos tu pedido. Te enviamos la propuesta en 48 horas.</p><button class="btn" data-close>Cerrar</button>`
+      : `<h2>No se pudo enviar</h2><p class="note">Revisá tu conexión e intentá de nuevo.</p><button class="btn" data-close>Cerrar</button>`;
+  };
+}
+function openModal(html){ $('mbox').innerHTML = html; $('modal').classList.add('on'); }
+$('modal').addEventListener('click', e => { if (e.target.id === 'modal' || e.target.dataset.close !== undefined) $('modal').classList.remove('on'); });
+function bindPortal(){
+  const on = (id, f) => { const el = $(id); if (el) el.onclick = f; };
+  on('goInvite', invite); on('goInvite2', invite);
+  on('goClose', () => { D.portalTab = 'cierre'; save(); render(); });
+  on('editPlan', () => { D.company.configured = false; D.company.step = 2; save(); render(); });
+  on('impCsv', () => openModal(`<h2>Importar nómina</h2><p class="note">Subí el archivo que exporta tu sistema de sueldos (cédula, nombre, sueldo nominal, fecha de ingreso).</p><pre>cedula;nombre;sueldo;ingreso\n1.234.560-0;Ana Pérez;62000;2025-09-01\n…</pre><p class="callout good">Demo: la nómina de ${D.people.length} personas ya está importada.</p><button class="btn" data-close>Cerrar</button>`));
+  document.querySelectorAll('[data-sal]').forEach(i => i.onchange = () => { const p = D.people.find(x => x.id === i.dataset.sal); p.salary = Math.max(0, +i.value || 0); save(); render(); toast('Sueldo actualizado'); });
+  on('nwAdd', () => { const n = $('nwName').value.trim(), sal = +$('nwSal').value; if (!n || !sal){ toast('Completá nombre y sueldo'); return; }
+    D.people.push({id:'e' + Date.now(), name:n, role:$('nwRole').value.trim() || '—', salary:sal, months:0, status: D.company.invited && D.company.plan.alcance === 'todos' ? 'invitado' : 'none', pct:0, fund:'world', planMonths:0, own:0, co:0, balOwn:0, balCo:0, units:0, history:[], series:[]});
+    save(); render(); toast(n + ' agregado' + (D.company.invited ? ' e invitado' : '')); });
+  document.querySelectorAll('[data-key]').forEach(c => c.onchange = () => { const ids = D.company.plan.claveIds; if (c.checked) ids.push(c.dataset.key); else ids.splice(ids.indexOf(c.dataset.key), 1); save(); render(); });
+  const titles = {nomina:'Descuentos para la nómina', transfer:'Transferencia al custodio', orden:'Orden de distribución por subcuenta'};
+  document.querySelectorAll('[data-file]').forEach(b => b.onclick = () => { openModal(`<h2>${titles[b.dataset.file]}</h2><pre>${esc(fileText(b.dataset.file))}</pre><div class="row"><button class="btn" id="cpFile">Copiar</button><button class="btn sec" data-close>Cerrar</button></div>`); $('cpFile').onclick = async () => { try { await navigator.clipboard.writeText(fileText(b.dataset.file)); toast('Copiado'); } catch(e){ toast('Seleccioná el texto y copialo'); } }; });
+  on('approve', () => { const t = runClose(); save(); render(); toast(`Cierre aprobado: ${usd(t / TC)} invertidos en ETF`); });
+  on('sim24', () => {
+    const me = ME(); if (me.status === 'invitado' || me.status === 'none'){ me.status = 'adherido'; me.pct = 4; me.fund = 'world'; }
+    for (let i = 0; i < 24; i++) runClose();
+    save(); render(); toast('Se simularon 24 cierres mensuales');
+  });
+}
+function runClose(){
+  const lines = monthLines(); const per = period(D.period);
+  let tE = 0, tC = 0;
+  D.people.forEach(p => { const r = RET(D.period, p.fund); p.balOwn *= 1 + r; p.balCo *= 1 + r; });
+  lines.forEach(l => {
+    const p = l.p, uE = l.e / TC, uC = l.c / TC, pr = price(p.fund, D.period + 1);
+    p.own += uE; p.co += uC; tE += l.e; tC += l.c;
+    p.balOwn += uE; p.balCo += uC; p.units += (uE + uC) / pr;
+    p.history.unshift({period: per, e: uE, c: uC, px: pr, u: (uE + uC) / pr});
+  });
+  D.people.forEach(p => {
+    if (p.status === 'adherido') p.planMonths += 1;
+    if (p.own) p.series.push({i: D.period, bal: p.balOwn + p.balCo, contrib: p.own + p.co, dep: (p.history[0] && p.history[0].period === per) ? p.history[0].e + p.history[0].c : 0, r: RET(D.period, p.fund)});
+  });
+  D.closes.push({period: per, emp: tE, co: tC, fee: lines.length * D.company.fee, n: lines.length});
+  D.people.forEach(p => p.months += 1);
+  D.period += 1;
+  return tE + tC;
+}
+function annualized(series){
+  if (!series || series.length < 2) return null;
+  const n = series.length, fin = series[n - 1].bal;
+  const fv = i => series.reduce((s, pt, t) => s + pt.dep * Math.pow(1 + i, n - 1 - t), 0);
+  let lo = -0.08, hi = 0.08;
+  for (let k = 0; k < 80; k++){ const mid = (lo + hi) / 2; if (fv(mid) > fin) hi = mid; else lo = mid; }
+  return Math.pow(1 + (lo + hi) / 2, 12) - 1;
+}
+
+// ---------------- app empleado ----------------
+const ME = () => D.people.find(p => p.id === 'e0');
+function renderApp(){
+  const me = ME(), app = $('app'), tb = $('tabbar');
+  const first = me.name.split(' ')[0];
+  tb.classList.add('hide');
+  if (me.status === 'pausado'){ app.innerHTML = `<div style="padding-top:100px;text-align:center"><h2>Tu aporte está en pausa</h2><p class="note">Lo que ahorraste sigue invertido en tu subcuenta.</p><button class="btn" id="resume">Retomar mi aporte</button></div>`; $('resume').onclick = () => { me.status = 'adherido'; save(); render(); }; return; }
+  if (!D.company.configured || me.status === 'none' || !eligible(me)){
+    app.innerHTML = `<div style="padding-top:120px;text-align:center"><div style="font-size:40px">◎</div><h2>Ahorro Compartido</h2><p class="note">Todavía no recibiste una invitación de tu empresa.</p><p class="note" style="margin-top:30px">(Demo: activá el plan e invitá a los empleados desde el Portal de la empresa.)</p></div>`;
+    return;
+  }
+  if (me.status === 'invitado'){ app.innerHTML = appOnboarding(me); bindAppOnboarding(me); return; }
+  tb.classList.remove('hide');
+  tb.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.t === D.appTab); b.onclick = () => { D.appTab = b.dataset.t; save(); renderApp(); }; });
+  const t = D.appTab;
+  if (t === 'movs') app.innerHTML = appMovs(me);
+  else if (t === 'aporte') { app.innerHTML = appAporte(me); bindAporte(me); }
+  else if (t === 'aprender') app.innerHTML = appAprender();
+  else if (t === 'rend') { app.innerHTML = appRend(me); bindRend(me); }
+  else { app.innerHTML = appInicio(me, first); const g = $('goRend'); if (g) g.onclick = () => { D.appTab = 'rend'; save(); renderApp(); }; }
+}
+function appOnboarding(me){
+  const s = D.appStep, pl = D.company.plan, first = me.name.split(' ')[0];
+  const p = D.appPct, e = me.salary * p / 100, c = me.salary * coPct(me, p) / 100;
+  if (s === 0) return `<div style="padding-top:30px"><div class="pill p-blue">Invitación de ${esc(D.company.name)}</div>
+    <h2 style="font-size:24px;line-height:1.2">${first}, tu empresa invierte con vos</h2>
+    <p>${pl.tipo === 'fijo' ? `${esc(D.company.name)} pone <b>${money(pl.fijo)} por mes</b> en tu cuenta si te sumás.` : `Por cada $1 que ahorres, ${esc(D.company.name)} pone <b>$${pl.match.toFixed(2)}</b>, hasta el ${pct(pl.tope)} de tu sueldo.`} Todo se invierte en fondos indexados globales.</p>
+    <div class="mc"><div class="mv"><span>Tu plata va a una subcuenta a tu nombre en Interactive Brokers</span></div><div class="mv"><span>Elegís dónde invertir: MSCI World o S&P 500</span></div><div class="mv"><span>Elegís cuánto aportar y lo cambiás cuando quieras</span></div></div>
+    <button class="btn block" style="margin-top:20px" id="aNext">Quiero sumarme</button><p class="note" style="text-align:center;margin-top:10px">Te lleva 3 minutos</p></div>`;
+  if (s === 1) return `<div style="padding-top:16px"><div class="note">Paso 1 de 4</div><h2>¿Cuánto querés ahorrar por mes?</h2>
+    <label class="f" style="margin-top:6px"><b>Tu sueldo nominal ($ por mes)</b><input type="number" id="aSal" value="${me.salary}" step="1000" min="0"></label>
+    <div class="mc" style="text-align:center"><div class="big">${pct(p)}</div><div class="note">de tu sueldo · ${money(e)} por mes</div>
+    <input type="range" id="aPct" min="1" max="15" step="0.5" value="${p}" style="margin-top:12px"></div>
+    <div class="mc"><div class="mv"><span>Vos ponés</span><b>${money(e)}</b></div><div class="mv"><span>La empresa pone</span><b style="color:var(--accent)">+ ${money(c)}</b></div><div class="mv"><span>Total invertido por mes</span><b>${money(e + c)} ≈ ${usd0((e + c) / TC)}</b></div></div>
+    ${pl.tipo !== 'fijo' && p * pl.match > pl.tope ? `<p class="note">Arriba de ${pct(pl.tope / pl.match)} la empresa ya no suma más.</p>` : ''}
+    <button class="btn block" id="aNext">Continuar</button></div>`;
+  if (s === 2) return `<div style="padding-top:16px"><div class="note">Paso 2 de 4</div><h2>¿Dónde querés invertir?</h2>
+    ${Object.entries(ETF).map(([k, f]) => `<button class="opt ${D.appFund === k ? 'on' : ''}" data-fund="${k}" style="width:100%;margin-top:10px"><b>${f.short} <span class="pill p-grey" style="margin-left:4px">${f.ticker}</span></b><span>${f.name}: ${f.desc}.</span><span style="display:block;margin-top:6px;color:var(--good);font-weight:600">Históricamente ${f.hist}</span></button>`).join('')}
+    <p class="note" style="margin-top:10px">Rendimientos pasados no garantizan rendimientos futuros. El valor de tu inversión puede subir o bajar.</p>
+    <button class="btn block" id="aNext">Continuar</button></div>`;
+  if (s === 3) return `<div style="padding-top:16px"><div class="note">Paso 3 de 4</div><h2>Abrimos tu subcuenta</h2>
+    <p class="note">Una subcuenta a tu nombre en Interactive Brokers, custodio regulado en EE.UU. Nadie más puede retirar tu dinero.</p>
+    <div class="mc"><label class="f"><b>Cédula</b><input type="text" value="1.234.560-0"></label>
+    <label class="f"><b>Fecha de nacimiento</b><input type="text" value="14/03/1998"></label>
+    <div class="mv"><span>Formulario fiscal W-8BEN</span><span class="pill p-good">Lo completamos por vos</span></div>
+    <div class="mv"><span>Consentimiento para transferir datos al exterior (Ley 18.331)</span><span class="pill p-good">✓</span></div></div>
+    <button class="btn block" style="margin-top:16px" id="aNext">Continuar</button></div>`;
+  return `<div style="padding-top:16px"><div class="note">Paso 4 de 4</div><h2>Autorizá el descuento</h2>
+    <div class="mc"><div class="mv"><span>Descuento mensual de tu sueldo</span><b>${money(e)}</b></div><div class="mv"><span>Inversión</span><span>${ETF[D.appFund].short} (${ETF[D.appFund].ticker})</span></div><div class="mv"><span>Aporte de la empresa</span><span>${VEST[pl.vest].label}</span></div></div>
+    <div class="check"><input type="checkbox" id="aOk"><label for="aOk">Autorizo a ${esc(D.company.name)} a descontar ${pct(p)} de mi sueldo para invertir en mi subcuenta (Ley 17.829). Puedo cambiarlo o suspenderlo cuando quiera.</label></div>
+    <button class="btn block" id="aFin" disabled>Confirmar y sumarme</button></div>`;
+}
+function bindAppOnboarding(me){
+  const n = $('aNext'); if (n) n.onclick = () => { D.appStep++; save(); renderApp(); };
+  const r = $('aPct'); if (r) r.oninput = ev => { D.appPct = +ev.target.value; save(); renderApp(); };
+  const sl = $('aSal'); if (sl) sl.onchange = ev => { me.salary = Math.max(0, +ev.target.value || 0); save(); render(); };
+  document.querySelectorAll('[data-fund]').forEach(b => b.onclick = () => { D.appFund = b.dataset.fund; save(); renderApp(); });
+  const ok = $('aOk'); if (ok) ok.onchange = () => $('aFin').disabled = !ok.checked;
+  const f = $('aFin'); if (f) f.onclick = () => { me.status = 'adherido'; me.pct = D.appPct; me.fund = D.appFund; D.appStep = 0; D.appTab = 'inicio'; save(); render(); toast('¡Listo! Tu primera inversión se hace en el próximo cierre'); };
+}
+function appInicio(me, first){
+  const tot = me.balOwn + me.balCo, gain = tot - me.own - me.co, fr = vestFrac(me.planMonths), nv = nextVest(me);
+  const leave = me.balOwn + me.balCo * fr;
+  const pOwn = tot ? me.balOwn / tot * 100 : 50, pV = tot ? me.balCo * fr / tot * 100 : 0;
+  return `<div class="hello">Hola, ${first}</div><div class="note" style="margin-top:14px">Tu inversión</div><div class="big">${usd(tot)}</div>
+    ${me.history.length > 1 ? `<div style="font-size:13px;color:${gain >= 0 ? 'var(--good)' : 'var(--bad)'};font-weight:600">${gain >= 0 ? '▲' : '▼'} ${usd(Math.abs(gain))} de rendimiento · <a style="color:var(--accent);cursor:pointer" id="goRend">ver mi cuenta</a></div>` : ''}
+    <div class="stack"><i style="width:${pOwn}%;background:var(--ink)"></i><i style="width:${pV}%;background:var(--accent)"></i><i style="width:${Math.max(0, 100 - pOwn - pV)}%;background:var(--grey)"></i></div>
+    <div class="leg"><span style="--c:var(--ink)">Tuyo</span><span style="--c:var(--accent)">Empresa, ya adquirido</span><span style="--c:var(--grey)">Empresa, en vesting</span></div>
+    ${!me.history.length ? `<div class="mc"><b>Ya estás adherida ✓</b><p class="note" style="margin:4px 0 0">Tu primera compra de ${ETF[me.fund].short} se hace con el cierre de ${period(D.period)}.</p></div>` : ''}
+    <div class="mc"><h3>Cada mes se invierte</h3><div class="mv"><span>Vos</span><b>${money(me.salary * me.pct / 100)}</b></div><div class="mv"><span>${esc(D.company.name)}</span><b style="color:var(--accent)">+ ${money(me.salary * coPct(me) / 100)}</b></div><div class="mv"><span>En</span><span>${ETF[me.fund].short} (${ETF[me.fund].ticker})</span></div></div>
+    <div class="mc"><h3>Vesting del aporte de la empresa</h3><div class="stack" style="margin:6px 0"><i style="width:${fr * 100}%;background:var(--accent)"></i></div>
+      <p style="margin:0;font-size:13px"><b>${Math.round(fr * 100)}% adquirido.</b> ${nv ? `En <b>${nv.when}</b> pasás a ${Math.round(nv.frac * 100)}%.` : 'Ya es todo tuyo.'}</p>
+      <p class="note" style="margin:6px 0 0">Si te vas hoy te llevás <b>${usd(leave)}</b>.</p></div>`;
+}
+function appRend(me){
+  const s = me.series || [];
+  if (s.length < 2) return `<h2>Mi cuenta</h2><div class="empty">Vas a ver el rendimiento de tu cuenta a partir del segundo mes.</div><p class="note" style="text-align:center">(Demo: en el portal, Inicio → "Simular 24 meses".)</p>`;
+  const range = D.rendRange || 'todo';
+  const k = range === '6m' ? 6 : range === '1a' ? 12 : s.length;
+  const view = s.slice(-Math.min(k + 1, s.length));
+  const last = s[s.length - 1], startPt = view[0];
+  const gain = last.bal - last.contrib;
+  const depIn = view.slice(1).reduce((a, p) => a + p.dep, 0);
+  const periodGain = last.bal - startPt.bal - depIn;
+  const ann = annualized(s), accum = gain / last.contrib, lastR = last.r;
+  const f = ETF[me.fund], px = price(me.fund, D.period);
+  const W = 320, H = 150, L = 4, R = 316, T = 10, B = 132;
+  const max = Math.max(...view.map(p => p.bal)) * 1.05;
+  const x = i => L + i / (view.length - 1) * (R - L), y = v => B - v / max * (B - T);
+  const line = view.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.bal).toFixed(1)}`).join(' ');
+  const area = view.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.contrib).toFixed(1)}`).join(' ') + ` L${R},${B} L${L},${B} Z`;
+  const fill = line + ` L${R},${B} L${L},${B} Z`;
+  const ini = period(s[0].i);
+  const sg = v => (v >= 0 ? '+' : '') + pct(v * 100);
+  const col = v => v >= 0 ? 'var(--good)' : 'var(--bad)';
+  return `<div class="row" style="margin-top:4px"><h2 class="grow" style="margin:0">Mi cuenta</h2><span class="pill p-blue">Subcuenta U8800100</span></div>
+    <div class="note" style="margin-top:12px">Valor de la cuenta</div><div class="big">${usd(last.bal)}</div>
+    <div style="font-size:13px;font-weight:600;color:${col(periodGain)}">${periodGain >= 0 ? '▲' : '▼'} ${usd(Math.abs(periodGain))} ${range === 'todo' ? 'desde el inicio' : range === '1a' ? 'en el último año' : 'en los últimos 6 meses'} <span class="note" style="font-weight:400">(sin contar aportes)</span></div>
+    <div class="row" style="gap:6px;margin:12px 0 4px">${[['6m','6M'],['1a','1A'],['todo','Desde inicio']].map(o => `<button class="btn sm ${range === o[0] ? '' : 'sec'}" data-rg="${o[0]}" style="flex:1">${o[1]}</button>`).join('')}</div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Evolución del valor de la cuenta frente a lo aportado">
+      <path d="${fill}" fill="#1f6feb" fill-opacity=".10"/><path d="${area}" fill="#c5c9d0" fill-opacity=".6"/>
+      <path d="${line}" fill="none" stroke="#1f6feb" stroke-width="2.2" stroke-linejoin="round"/>
+      <circle cx="${x(view.length - 1)}" cy="${y(last.bal)}" r="3.5" fill="#1f6feb"/>
+      <text x="${L}" y="${H - 2}" font-size="10" fill="#5d6675">${period(view[0].i)}</text><text x="${R}" y="${H - 2}" font-size="10" fill="#5d6675" text-anchor="end">${period(last.i)}</text>
+    </svg>
+    <div class="leg" style="margin-bottom:6px"><span style="--c:#1f6feb">Valor de la cuenta</span><span style="--c:#c5c9d0">Lo que se aportó</span></div>
+    <div class="kpis" style="grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 0">
+      <div class="kpi" style="padding:10px"><div class="l">Rendimiento anualizado</div><div class="v" style="font-size:18px;color:${col(ann)}">${sg(ann)}</div><div class="s">TIR desde el inicio</div></div>
+      <div class="kpi" style="padding:10px"><div class="l">Rendimiento acumulado</div><div class="v" style="font-size:18px;color:${col(accum)}">${sg(accum)}</div><div class="s">sobre lo aportado</div></div>
+      <div class="kpi" style="padding:10px"><div class="l">Ganancia total</div><div class="v" style="font-size:18px">${usd(gain)}</div><div class="s">desde ${ini}</div></div>
+      <div class="kpi" style="padding:10px"><div class="l">Último mes</div><div class="v" style="font-size:18px;color:${col(lastR)}">${sg(lastR)}</div><div class="s">${period(last.i)}</div></div>
+    </div>
+    <div class="mc"><h3>Tu cartera</h3>
+      <div class="mv"><span><b>${f.ticker}</b><small>${f.name}</small></span><span style="text-align:right"><b>${usd(last.bal)}</b><small>100% de la cartera</small></span></div>
+      <div class="mv"><span>Cuotas</span><span>${me.units.toFixed(4)}</span></div>
+      <div class="mv"><span>Precio de referencia</span><span>${usd(px)}</span></div></div>
+    <div class="mc"><h3>Composición del valor</h3>
+      <div class="mv"><span>Tus aportes</span><b>${usd(me.own)}</b></div>
+      <div class="mv"><span>Aportes de ${esc(D.company.name)}</span><b style="color:var(--accent)">${usd(me.co)}</b></div>
+      <div class="mv"><span>Rendimiento</span><b style="color:${col(gain)}">${usd(gain)}</b></div>
+      <div class="mv"><span><b>Valor de la cuenta</b></span><b>${usd(last.bal)}</b></div>
+      <div class="mv"><span>Si te vas hoy te llevás</span><b>${usd(me.balOwn + me.balCo * vestFrac(me.planMonths))}</b></div></div>
+    <div class="mc"><h3>Datos de la cuenta</h3>
+      <div class="mv"><span>Inicio</span><span>${ini}</span></div>
+      <div class="mv"><span>Aportes</span><span>${s.length} meses</span></div>
+      <div class="mv"><span>Custodio</span><span>Interactive Brokers</span></div></div>
+    <p class="note">Valores en dólares. Rentabilidad simulada para la demo a partir del rendimiento histórico aproximado del índice (~10% anual). Rendimientos pasados no garantizan rendimientos futuros.</p>`;
+}
+function bindRend(me){ document.querySelectorAll('[data-rg]').forEach(b => b.onclick = () => { D.rendRange = b.dataset.rg; save(); renderApp(); }); }
+function appMovs(me){
+  if (!me.history.length) return `<h2>Movimientos</h2><div class="empty">Todavía no hay movimientos. La primera compra se hace con el cierre de ${period(D.period)}.</div>`;
+  return `<h2>Movimientos</h2><div class="mc">` + me.history.slice(0, 30).map(h => `<div class="mv"><span>Compra ${ETF[me.fund].ticker} · ${h.period}<small>${h.u.toFixed(4)} cuotas a ${usd(h.px)} · vos ${usd(h.e)} + empresa ${usd(h.c)}</small></span><b>+ ${usd(h.e + h.c)}</b></div>`).join('') + '</div>';
+}
+function appAporte(me){
+  return `<h2>Mi aporte</h2><div class="mc" style="text-align:center"><div class="big">${pct(me.pct)}</div><div class="note">${money(me.salary * me.pct / 100)} por mes</div>
+    <input type="range" id="mPct" min="1" max="15" step="0.5" value="${me.pct}" style="margin-top:12px"></div>
+    <div class="mc"><div class="mv"><span>La empresa suma</span><b style="color:var(--accent)">${money(me.salary * coPct(me) / 100)}</b></div><div class="mv"><span>Inversión</span><span>${ETF[me.fund].short}</span></div></div>
+    <button class="btn block" id="mSave">Guardar cambio</button>
+    <button class="btn sec block" style="margin-top:8px" id="mPause">Pausar mi aporte</button>
+    <p class="note">Los cambios se aplican desde el próximo cierre.</p>`;
+}
+function bindAporte(me){
+  let v = me.pct;
+  $('mPct').oninput = e => { v = +e.target.value; const s = $('app'); const big = s.querySelector('.big'); big.textContent = pct(v); big.nextElementSibling.textContent = money(me.salary * v / 100) + ' por mes'; s.querySelector('.mc + .mc b').textContent = money(me.salary * coPct(me, v) / 100); };
+  $('mSave').onclick = () => { me.pct = v; save(); render(); toast('Aporte actualizado'); };
+  $('mPause').onclick = () => { me.status = 'pausado'; save(); render(); toast('Aporte pausado'); };
+}
+function appAprender(){
+  const cards = [['¿Qué es un ETF?','Un fondo que compra todas las acciones de un índice. Con una sola cuota tenés un pedacito de cientos de empresas.'],
+    ['¿MSCI World o S&P 500?','MSCI World reparte en 23 países desarrollados; el S&P 500 se concentra en Estados Unidos. Ambos rindieron históricamente cerca de 10% anual en dólares, con años negativos.'],
+    ['¿Por qué conviene sumarse?', D.company.plan.tipo === 'fijo' ? 'La empresa pone ' + money(D.company.plan.fijo) + ' por mes en tu cuenta, antes de cualquier rendimiento.' : 'Cada $1 que ponés suma al instante $' + D.company.plan.match.toFixed(2) + ' de la empresa, antes de cualquier rendimiento.'],
+    ['¿Qué es el vesting?','El aporte de la empresa se vuelve tuyo de a poco: ' + VEST[D.company.plan.vest].desc.toLowerCase()],
+    ['¿Qué riesgos tiene?','El valor sube y baja con el mercado. Es ahorro de largo plazo: en plazos cortos podés ver pérdidas.']];
+  return `<h2>Aprender</h2>` + cards.map(c => `<div class="mc"><h3>${c[0]}</h3><p class="note" style="margin:0">${c[1]}</p></div>`).join('');
+}
+
+// ---------------- render all ----------------
+function render(){ renderPortal(); renderApp(); }
+
+const startView = ['empresa','empleado'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'empresa';
+setView(startView);
+
+})();
+</script>
+</body>
+</html>

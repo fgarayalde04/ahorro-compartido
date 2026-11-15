@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Ahorro Compartido · Resultados del MVP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f5f7;--ink:#121620;--muted:#5d6675;--line:#e2e5ea;--accent:#1f6feb;--accent-soft:#e9f1fe;--good:#167a48;--good-soft:#e5f3ec;--warn:#8a4b00;--warn-soft:#fff3e2;--bad:#b42318;--bad-soft:#fdecea}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+.top{background:#0f1724;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:12px}
+.top b{font-size:16px}.top span{color:#aeb7c6}.top .sp{flex:1}
+.top a,.top button{color:#cfd6e2;border:1px solid #3a475c;background:none;border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;text-decoration:none;cursor:pointer}
+main{max-width:1100px;margin:0 auto;padding:24px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:15px;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi .l{font-size:12px;color:var(--muted)}.kpi .v{font-size:24px;font-weight:700}.kpi .s{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.ok{background:var(--good-soft);color:var(--good)}.no{background:var(--bad-soft);color:var(--bad)}.pend{background:#eef0f3;color:var(--muted)}.mid{background:var(--warn-soft);color:var(--warn)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:860px){.two{grid-template-columns:1fr}}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:5px 9px;font-size:12px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:10px}
+label b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;min-width:80px}.bar i{display:block;height:100%;background:var(--accent)}
+.login{max-width:360px;margin:12vh auto}
+.note{font-size:12px;color:var(--muted)}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:14px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="top"><b>Ahorro Compartido</b><span>Resultados del MVP</span><div class="sp"></div><a href="/" target="_blank">Landing</a><a href="/demo" target="_blank">Prototipo</a><button id="out" class="hide">Salir</button></div>
+<div class="login card" id="login">
+  <h2>Panel del equipo</h2>
+  <label><b>Clave</b><input type="password" id="pw" autocomplete="current-password"></label>
+  <button class="btn" id="enter">Entrar</button> <span class="note" id="lerr"></span>
+</div>
+<main id="app" class="hide"></main>
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pc = (a, b) => b ? Math.round(a / b * 100) : null;
+let KEY = '';
+try { KEY = sessionStorage.getItem('ac-key') || ''; } catch(e){}
+async function api(url, opts = {}){
+  const r = await fetch(url, Object.assign({}, opts, {headers: Object.assign({'Content-Type':'application/json', 'x-admin-key': KEY}, opts.headers || {})}));
+  if (r.status === 401) throw new Error('auth');
+  return r.json();
+}
+async function load(){
+  try {
+    const {eventos} = await api('/api/admin/datos');
+    $('login').classList.add('hide'); $('app').classList.remove('hide'); $('out').classList.remove('hide');
+    render(eventos);
+  } catch(e){
+    $('login').classList.remove('hide'); $('app').classList.add('hide');
+    if (KEY) $('lerr').textContent = 'Clave incorrecta';
+  }
+}
+$('enter').onclick = () => { KEY = $('pw').value; try { sessionStorage.setItem('ac-key', KEY); } catch(e){} load(); };
+$('pw').onkeydown = e => { if (e.key === 'Enter') $('enter').click(); };
+$('out').onclick = () => { KEY = ''; try { sessionStorage.removeItem('ac-key'); } catch(e){} location.reload(); };
+
+function status(v, thr){ return v === null ? '<span class="pill pend">Sin datos</span>' : v >= thr ? '<span class="pill ok">Cumple</span>' : '<span class="pill no">No cumple</span>'; }
+function dist(rows, key){
+  const m = {}; rows.forEach(r => { const k = r.data[key] || '—'; m[k] = (m[k] || 0) + 1; });
+  const tot = rows.length; return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<tr><td>${esc(k)}</td><td class="n">${n}</td><td style="width:40%"><div class="bar"><i style="width:${pc(n, tot)}%"></i></div></td><td class="n">${pc(n, tot)}%</td></tr>`).join('') || '<tr><td colspan="4" class="note">Sin datos todavía</td></tr>';
+}
+function render(ev){
+  const of = t => ev.filter(e => e.tipo === t);
+  const vis = of('visita'), ini = of('inicio'), res = of('respuesta'), pro = of('propuesta'), reg = of('registro');
+  const yes = res.filter(r => r.data.sumaria === 'Sí').length;
+  const avgAp = res.length ? res.reduce((s, r) => s + (+r.data.aporte || 0), 0) / res.length : null;
+  const prefBen = pc(res.filter(r => r.data.efectivo === 'El ahorro con aporte de la empresa').length, res.length);
+  const top2 = pc(res.filter(r => r.data.ben1 === 'Ahorro con aporte de la empresa' || r.data.ben2 === 'Ahorro con aporte de la empresa').length, res.length);
+  const dec = reg.filter(r => r.data.segmento !== 'Experto' && r.data.segmento !== 'Empleado');
+  const decProp = pc(dec.filter(r => r.data.pidioPropuesta === 'Sí').length, dec.length);
+  const codes = [...new Set(ev.filter(e => ['visita','inicio','respuesta'].includes(e.tipo)).map(e => e.data.codigo || 'general'))];
+  const csv = t => `/api/admin/csv?tipo=${t}&key=${encodeURIComponent(KEY)}`;
+  const fmtD = d => new Date(d).toLocaleString('es-UY', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+  $('app').innerHTML = `
+  <h1>Resultados del MVP</h1><p class="sub">Datos en vivo de la landing para empleados, los pedidos de propuesta del prototipo y las entrevistas registradas. Actualizado: ${new Date().toLocaleString('es-UY')} <button class="btn sec sm" id="rf">Actualizar</button></p>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Visitas a la landing</div><div class="v">${vis.length}</div></div>
+    <div class="kpi"><div class="l">Empezaron el cálculo</div><div class="v">${ini.length}</div><div class="s">${pc(ini.length, vis.length) ?? '—'}% de las visitas</div></div>
+    <div class="kpi"><div class="l">Respuestas completas</div><div class="v">${res.length}</div><div class="s">${pc(res.length, vis.length) ?? '—'}% de las visitas</div></div>
+    <div class="kpi"><div class="l">"Sí, me sumaría"</div><div class="v">${yes}</div><div class="s">${pc(yes, res.length) ?? '—'}% de las respuestas</div></div>
+    <div class="kpi"><div class="l">Pedidos de propuesta</div><div class="v">${pro.length}</div><div class="s">desde el prototipo</div></div>
+  </div>
+  <div class="card"><h2>Métricas frente a los umbrales del protocolo</h2><table>
+    <tr><th>Métrica</th><th class="n">Resultado</th><th class="n">Umbral</th><th>Estado</th></tr>
+    <tr><td>Decisores que piden la propuesta</td><td class="n">${decProp === null ? '—' : decProp + '% (' + dec.length + ')'}</td><td class="n">≥ 50%</td><td>${status(decProp, 50)}</td></tr>
+    <tr><td>Respuestas de empleados</td><td class="n">${res.length}</td><td class="n">≥ 60</td><td>${status(res.length || null, 60)}</td></tr>
+    <tr><td>Empleados que se sumarían</td><td class="n">${pc(yes, res.length) ?? '—'}%</td><td class="n">≥ 40%</td><td>${status(pc(yes, res.length), 40)}</td></tr>
+    <tr><td>Aporte promedio elegido</td><td class="n">${avgAp === null ? '—' : avgAp.toFixed(1) + '%'}</td><td class="n">≥ 3%</td><td>${status(avgAp, 3)}</td></tr>
+    <tr><td>Prefieren el beneficio antes que el efectivo</td><td class="n">${prefBen ?? '—'}%</td><td class="n">≥ 30%</td><td>${status(prefBen, 30)}</td></tr>
+    <tr><td>El ahorro entre sus 2 beneficios preferidos</td><td class="n">${top2 ?? '—'}%</td><td class="n">≥ 40%</td><td>${status(top2, 40)}</td></tr>
+  </table><p class="note">Con pocas respuestas los porcentajes son indicativos, no concluyentes.</p></div>
+  <div class="card"><h2>Embudo por empresa (código del link)</h2><table><tr><th>Código</th><th class="n">Visitas</th><th class="n">Empezaron</th><th class="n">Respondieron</th><th class="n">Se sumarían</th></tr>
+    ${codes.map(c => { const f = a => a.filter(e => (e.data.codigo || 'general') === c); return `<tr><td>${esc(c)}</td><td class="n">${f(vis).length}</td><td class="n">${f(ini).length}</td><td class="n">${f(res).length}</td><td class="n">${f(res).filter(r => r.data.sumaria === 'Sí').length}</td></tr>`; }).join('') || '<tr><td colspan="5" class="note">Sin visitas todavía</td></tr>'}</table></div>
+  <div class="two">
+    <div class="card"><h2>¿Se sumarían?</h2><table>${dist(res, 'sumaria')}</table></div>
+    <div class="card"><h2>Qué los frena</h2><table>${dist(res.filter(r => r.data.motivo), 'motivo')}</table></div>
+    <div class="card"><h2>Efectivo o beneficio</h2><table>${dist(res, 'efectivo')}</table></div>
+    <div class="card"><h2>Dónde invertirían</h2><table>${dist(res, 'fondo')}</table></div>
+    <div class="card"><h2>Beneficio preferido (1° lugar)</h2><table>${dist(res, 'ben1')}</table></div>
+    <div class="card"><h2>Aporte elegido</h2><table>${dist(res.map(r => ({data:{a: r.data.aporte + '%'}})), 'a')}</table></div>
+  </div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Respuestas de empleados</h2><a class="btn sec sm" href="${csv('respuesta')}">Descargar CSV</a></div>
+    <div style="overflow-x:auto"><table><tr><th>Fecha</th><th>Código</th><th>¿Se suma?</th><th>Aporte</th><th>Sueldo</th><th>Fondo</th><th>Efectivo vs. beneficio</th><th>Beneficios</th><th>Contacto</th><th></th></tr>
+    ${res.map(r => `<tr><td>${fmtD(r.creado)}</td><td>${esc(r.data.codigo)}</td><td>${esc(r.data.sumaria)}${r.data.motivo ? '<div class="note">' + esc(r.data.motivo) + '</div>' : ''}</td><td class="n">${esc(r.data.aporte)}%</td><td class="n">$${(+r.data.sueldo || 0).toLocaleString('es-UY')}</td><td>${esc(r.data.fondo)}</td><td>${esc(r.data.efectivo)}</td><td>1) ${esc(r.data.ben1)}<br>2) ${esc(r.data.ben2)}</td><td>${esc(r.data.nombre)} ${esc(r.data.contacto)}</td><td><button class="x" data-del="${r.id}" title="Borrar (ej.: respuesta de prueba)">✕</button></td></tr>`).join('') || '<tr><td colspan="10" class="note">Sin respuestas todavía</td></tr>'}</table></div></div>
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Pedidos de propuesta (prototipo)</h2><a class="btn sec sm" href="${csv('propuesta')}">Descargar CSV</a></div>
+    <table><tr><th>Fecha</th><th>Empresa</th><th>Contacto</th><th>Quiere</th><th>Plan simulado</th><th></th></tr>
+    ${pro.map(r => `<tr><td>${fmtD(r.creado)}</td><td><b>${esc(r.data.empresa)}</b><div class="note">${esc(r.data.empleados)} empleados · ${esc(r.data.costo)}</div></td><td>${esc(r.data.contacto)}<div class="note">${esc(r.data.email)}</div></td><td>${esc(r.data.quiere)}</td><td class="note">${esc(r.data.plan)}</td><td><button class="x" data-del="${r.id}">✕</button></td></tr>`).join('') || '<tr><td colspan="6" class="note">Sin pedidos todavía</td></tr>'}</table></div>
+  <div class="two">
+    <div class="card"><h2>Registrar una entrevista</h2>
+      <div class="grid3"><label><b>Fecha</b><input type="date" id="rFecha" value="${new Date().toISOString().slice(0,10)}"></label>
+      <label><b>Modalidad</b><select id="rMod"><option>Videollamada</option><option>Presencial</option><option>Mail</option><option>WhatsApp</option></select></label>
+      <label><b>Segmento</b><select id="rSeg"><option>A · Multinacional</option><option>B · Nacional</option><option>Experto</option><option>Empleado</option></select></label></div>
+      <label><b>Organización</b><input id="rOrg"></label><label><b>Rol</b><input id="rRol"></label>
+      <div class="grid3"><label><b>Categoría</b><select id="rCat"><option>Avance concreto</option><option>Interés condicionado</option><option>Objeción de fondo</option><option>No aplica</option></select></label>
+      <label><b>Objeción principal</b><select id="rObj"><option></option><option>Costo</option><option>Confianza / operativa</option><option>Impositiva / BPS</option><option>Timing / proceso interno</option><option>Equidad</option><option>Prioridad</option></select></label>
+      <label><b>¿Pidió la propuesta?</b><select id="rProp"><option>No</option><option>Sí</option></select></label></div>
+      <label><b>¿A quién lo llevaría?</b><input id="rQuien"></label><label><b>Cita textual o notas</b><textarea id="rNotas" rows="3"></textarea></label>
+      <button class="btn" id="rSave">Guardar entrevista</button> <span class="note" id="rMsg"></span></div>
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Entrevistas registradas</h2><a class="btn sec sm" href="${csv('registro')}">Descargar CSV</a></div>
+      <table>${dist(dec, 'categoria')}</table>
+      <table style="margin-top:10px"><tr><th>Fecha</th><th>Organización</th><th>Categoría</th><th></th></tr>${reg.map(r => `<tr><td>${esc(r.data.fecha)}</td><td>${esc(r.data.organizacion)}<div class="note">${esc(r.data.rol)} · ${esc(r.data.modalidad)}${r.data.notas ? ' · “' + esc(r.data.notas.slice(0, 80)) + '”' : ''}</div></td><td>${esc(r.data.categoria)}${r.data.pidioPropuesta === 'Sí' ? '<div class="pill ok">Pidió propuesta</div>' : ''}</td><td><button class="x" data-del="${r.id}">✕</button></td></tr>`).join('') || '<tr><td colspan="4" class="note">Sin entrevistas registradas</td></tr>'}</table></div>
+  </div>`;
+  $('rf').onclick = load;
+  document.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = '¿Borrar?'; return; } await api('/api/admin/eventos/' + b.dataset.del, {method:'DELETE'}); load(); });
+  $('rSave').onclick = async () => {
+    const body = {fecha: $('rFecha').value, modalidad: $('rMod').value, segmento: $('rSeg').value.replace(/^[AB] · /, m => m), organizacion: $('rOrg').value, rol: $('rRol').value, categoria: $('rCat').value, objecion: $('rObj').value, pidioPropuesta: $('rProp').value, quien: $('rQuien').value, notas: $('rNotas').value};
+    if (!body.organizacion.trim()){ $('rMsg').textContent = 'Completá la organización'; return; }
+    body.segmento = $('rSeg').value.startsWith('A') || $('rSeg').value.startsWith('B') ? $('rSeg').value : $('rSeg').value;
+    await api('/api/registros', {method:'POST', body: JSON.stringify(body)}); load();
+  };
+}
+load();
+})();
+</script>
+</body>
+</html>

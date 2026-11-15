@@ -1,0 +1,16 @@
+{
+  "name": "ahorro-compartido",
+  "version": "1.0.0",
+  "description": "MVP de Ahorro Compartido: beneficio de ahorro con aporte de la empresa, invertido en ETF globales. Proyecto de Nuevos Emprendimientos, Universidad ORT Uruguay.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}
