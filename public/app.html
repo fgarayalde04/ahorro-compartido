@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ahorro Compartido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#121620;--muted:#5d6675;--line:#e2e5ea;--accent:#1f6feb;--accent-soft:#e9f1fe;--good:#167a48;--good-soft:#e5f3ec;--warn:#8a4b00;--warn-soft:#fff3e2;--bad:#b42318;--bad-soft:#fdecea;--grey:#c5c9d0}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+button{font:inherit;cursor:pointer}
+a{color:var(--accent)}
+.top{display:flex;align-items:center;gap:14px;padding:12px 20px;background:#0f1724;color:#fff}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;color:#fff;text-decoration:none}
+.logo i{width:26px;height:26px;border-radius:8px;background:var(--accent);display:grid;place-items:center;font-style:normal;font-size:14px}
+.top .sp{flex:1}.top .who{color:#aeb7c6;font-size:13px}
+.top button{border:1px solid #3a475c;background:transparent;color:#cfd6e2;border-radius:8px;padding:6px 10px;font-size:12px}
+.portal{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 52px)}
+@media(max-width:820px){.portal{grid-template-columns:1fr}.side{display:flex;overflow-x:auto}}
+.side{background:#fff;border-right:1px solid var(--line);padding:16px 10px}
+.side .co{padding:6px 10px 14px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.side .co b{display:block}.side .co span{font-size:12px;color:var(--muted)}
+.side a{display:flex;gap:8px;padding:9px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:500;cursor:pointer;white-space:nowrap}
+.side a.on{background:var(--accent-soft);color:var(--accent)}
+.content{padding:24px 28px;max-width:1080px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:15px;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi .l{font-size:12px;color:var(--muted)}.kpi .v{font-size:22px;font-weight:700;margin-top:2px}.kpi .s{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.tot td{font-weight:700;border-top:2px solid var(--ink)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.p-good{background:var(--good-soft);color:var(--good)}.p-warn{background:var(--warn-soft);color:var(--warn)}.p-grey{background:#eef0f3;color:var(--muted)}.p-blue{background:var(--accent-soft);color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:#fff;border:0;border-radius:9px;padding:10px 16px;font-weight:600;text-decoration:none}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+label.f{display:block;margin-bottom:14px;color:var(--muted);font-size:13px}
+label.f b{display:flex;justify-content:space-between;color:var(--ink);font-weight:600;font-size:14px;margin-bottom:5px}
+label.f b output{color:var(--accent)}
+input[type=text],input[type=email],input[type=password],input[type=number],input[type=month],select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font:inherit;background:#fff;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.opt{border:1.5px solid var(--line);border-radius:10px;padding:12px;background:#fff;text-align:left}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.opt b{display:block;margin-bottom:2px}.opt span{font-size:12px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 340px;gap:16px}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>.grow{flex:1;min-width:140px}
+.note{font-size:12px;color:var(--muted)}
+.callout{padding:12px 14px;border-radius:10px;background:var(--accent-soft);color:#173b7a;font-size:13px;margin-bottom:14px}
+.callout.warn{background:var(--warn-soft);color:var(--warn)}.callout.good{background:var(--good-soft);color:var(--good)}.callout.bad{background:var(--bad-soft);color:var(--bad)}
+.empty{color:var(--muted);text-align:center;padding:26px}
+.auth{max-width:440px;margin:6vh auto;padding:0 16px}
+.tabs2{display:flex;background:#eef0f3;border-radius:10px;padding:4px;margin-bottom:16px}
+.tabs2 button{flex:1;border:0;background:none;padding:8px;border-radius:8px;font-weight:600;color:var(--muted)}
+.tabs2 button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:12px 0}
+.check input{margin-top:3px}
+/* employee */
+.emp{max-width:520px;margin:0 auto;padding:18px 16px 90px}
+.big{font-size:34px;font-weight:800;letter-spacing:-.02em}
+.mc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:12px}
+.mc h3{margin:0 0 8px;font-size:14px}
+.mv{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.mv:last-child{border:0}.mv small{display:block;color:var(--muted);font-size:12px}
+.stack{height:12px;border-radius:6px;overflow:hidden;display:flex;background:var(--line);margin:10px 0}.stack i{height:100%}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.leg span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--c);margin-right:4px;vertical-align:-1px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;background:#fff;border-top:1px solid var(--line)}
+.tabbar div{display:flex;max-width:520px;width:100%}
+.tabbar button{flex:1;border:0;background:none;padding:10px 0 14px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabbar button.on{color:var(--accent);font-weight:600}.tabbar span{font-size:18px}
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:#0f1724;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:30}
+.toast.on{opacity:1}
+.copy{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#f6f7f9;border:1px solid var(--line);border-radius:8px;padding:6px 8px;word-break:break-all}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="top"><a class="logo" href="/app"><i>◎</i>Ahorro Compartido</a><div class="sp"></div><span class="who" id="who"></span><button id="logout" class="hide">Salir</button></div>
+<div id="root"></div>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const root = $('root');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money = v => '$' + Math.round(+v || 0).toLocaleString('es-UY');
+const usd = v => 'US$ ' + (+v || 0).toLocaleString('es-UY', {minimumFractionDigits:2, maximumFractionDigits:2});
+const pct = v => (Math.round((+v || 0) * 100) / 100).toLocaleString('es-UY') + '%';
+const sgn = v => v === null || v === undefined ? '—' : (v >= 0 ? '+' : '') + pct(v * 100);
+const col = v => v >= 0 ? 'var(--good)' : 'var(--bad)';
+const MES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
+const per = p => p ? MES[+p.slice(5, 7) - 1] + ' ' + p.slice(0, 4) : '—';
+const ymNow = () => new Date().toISOString().slice(0, 7);
+const toast = t => { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('on'), 2400); };
+async function api(method, url, body){
+  const r = await fetch(url, {method, headers: body ? {'Content-Type':'application/json'} : {}, body: body ? JSON.stringify(body) : undefined, credentials: 'same-origin'});
+  let j = {}; try { j = await r.json(); } catch(e){}
+  if (!r.ok) throw new Error(j.error || 'Error ' + r.status);
+  return j;
+}
+let ME = null, VIEW = 'inicio', AUTHTAB = 'login';
+
+async function boot(){
+  const inv = location.pathname.match(/^\/invitacion\/([\w-]+)/);
+  ME = await api('GET', '/api/me');
+  $('who').textContent = ME.usuario ? ME.usuario.nombre + (ME.empresa ? ' · ' + ME.empresa.nombre : '') : '';
+  $('logout').classList.toggle('hide', !ME.usuario);
+  if (inv && !ME.usuario) return invitation(inv[1]);
+  if (!ME.usuario) return authView();
+  if (inv) history.replaceState(null, '', '/app');
+  if (ME.usuario.rol === 'empresa') return ME.empresa.planOk ? portal() : planSetup(true);
+  return employee();
+}
+$('logout').onclick = async () => { await api('POST', '/api/auth/logout'); location.href = '/app'; };
+
+// ================= AUTH =================
+function authView(){
+  root.innerHTML = `<div class="auth"><div class="card">
+    <h1 style="margin-bottom:6px">${AUTHTAB === 'login' ? 'Ingresá a tu cuenta' : 'Registrá tu empresa'}</h1>
+    <p class="sub">${AUTHTAB === 'login' ? 'Empresas y empleados entran con su mail.' : 'Ofrecé a tu equipo un plan de ahorro en dólares con aporte de la empresa.'}</p>
+    <div class="tabs2"><button data-t="login" class="${AUTHTAB === 'login' ? 'on' : ''}">Ingresar</button><button data-t="registro" class="${AUTHTAB === 'registro' ? 'on' : ''}">Registrar empresa</button></div>
+    ${AUTHTAB === 'login' ? `
+      <label class="f"><b>Mail</b><input type="email" id="lEmail" autocomplete="email"></label>
+      <label class="f"><b>Contraseña</b><input type="password" id="lPass" autocomplete="current-password"></label>
+      <button class="btn block" id="go">Ingresar</button>
+      <p class="note" style="margin-top:12px">¿Sos empleado? Entrá con el link de invitación que te mandó tu empresa.</p>` : `
+      <label class="f"><b>Razón social</b><input type="text" id="rEmp"></label>
+      <div class="row"><label class="f grow"><b>RUT</b><input type="text" id="rRut"></label><label class="f grow"><b>Cantidad de empleados</b><input type="number" id="rCant" min="1"></label></div>
+      <label class="f"><b>Tu nombre</b><input type="text" id="rNom" autocomplete="name"></label>
+      <label class="f"><b>Mail</b><input type="email" id="rEmail" autocomplete="email"></label>
+      <label class="f"><b>Contraseña (mínimo 8 caracteres)</b><input type="password" id="rPass" autocomplete="new-password"></label>
+      <button class="btn block" id="go">Crear cuenta de empresa</button>`}
+    <p class="note" id="err" style="color:var(--bad);margin-top:10px"></p></div>
+    <p class="note" style="text-align:center">MVP de un proyecto de Nuevos Emprendimientos · Universidad ORT Uruguay</p></div>`;
+  root.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { AUTHTAB = b.dataset.t; authView(); });
+  $('go').onclick = async () => {
+    $('err').textContent = '';
+    try {
+      if (AUTHTAB === 'login') await api('POST', '/api/auth/login', {email: $('lEmail').value, password: $('lPass').value});
+      else await api('POST', '/api/auth/registro', {empresa: $('rEmp').value, rut: $('rRut').value, cantEmpleados: $('rCant').value, nombre: $('rNom').value, email: $('rEmail').value, password: $('rPass').value});
+      boot();
+    } catch(e){ $('err').textContent = e.message; }
+  };
+  root.querySelectorAll('input').forEach(i => i.onkeydown = e => { if (e.key === 'Enter') $('go').click(); });
+}
+
+async function invitation(t){
+  let inv; try { inv = await api('GET', '/api/invitacion/' + t); } catch(e){ root.innerHTML = `<div class="auth"><div class="card"><h1>Invitación no válida</h1><p class="sub">${esc(e.message)}</p><a class="btn" href="/app">Ir a ingresar</a></div></div>`; return; }
+  root.innerHTML = `<div class="auth"><div class="card">
+    <span class="pill p-blue">Invitación de ${esc(inv.empresa)}</span>
+    <h1 style="margin:10px 0 6px">${esc(inv.nombre.split(' ')[0])}, tu empresa invierte con vos</h1>
+    <p class="sub">Por cada $1 que ahorres, ${esc(inv.empresa)} pone <b>$${inv.plan.match.toFixed(2)}</b>, hasta el ${pct(inv.plan.tope)} de tu sueldo. Todo se invierte en fondos indexados globales en una cuenta a tu nombre.</p>
+    <label class="f"><b>Mail</b><input type="email" id="iEmail" value="${esc(inv.email || '')}"></label>
+    <label class="f"><b>Creá tu contraseña (mínimo 8 caracteres)</b><input type="password" id="iPass" autocomplete="new-password"></label>
+    <button class="btn block" id="go">Crear mi cuenta</button><p class="note" id="err" style="color:var(--bad);margin-top:10px"></p></div></div>`;
+  $('go').onclick = async () => { try { await api('POST', '/api/invitacion/' + t, {email: $('iEmail').value, password: $('iPass').value}); history.replaceState(null, '', '/app'); boot(); } catch(e){ $('err').textContent = e.message; } };
+}
+
+// ================= EMPRESA =================
+function planForm(e){
+  return `<div class="card"><h2>¿Cuánto pone la empresa?</h2>
+      <label class="f"><b>Por cada $1 del empleado <output id="oM">$${(+e.match).toFixed(2)}</output></b><input type="range" id="pM" min="0.25" max="1" step="0.25" value="${e.match}"></label>
+      <label class="f"><b>Tope del aporte de la empresa <output id="oT">${pct(e.tope)} del sueldo</output></b><input type="range" id="pT" min="1" max="15" step="0.5" value="${e.tope}"></label></div>
+    <div class="card"><h2>¿Cuándo es del empleado el aporte de la empresa?</h2><div class="opts">
+      ${[[3,'Vesting 3 años','⅓ por cada año en el plan.'],[5,'Vesting 5 años','20% por año.'],[0,'Sin vesting','Es del empleado desde el primer día.']].map(v => `<button class="opt ${+e.vesting === v[0] ? 'on' : ''}" data-v="${v[0]}"><b>${v[1]}</b><span>${v[2]}</span></button>`).join('')}</div>
+      <p class="note" style="margin:10px 0 0">Si alguien se va antes, la parte no adquirida vuelve a la empresa. El aporte propio del empleado siempre es suyo.</p></div>
+    <div class="card"><h2>¿Dónde se invierte?</h2><p style="margin:0">Fondos indexados globales: cada empleado elige <b>MSCI World (URTH)</b> o <b>S&P 500 (SPY)</b>. Las cuotas se registran al precio real de mercado del mes.</p>
+      <label class="f" style="margin:14px 0 0"><b>Tipo de cambio de referencia ($ por US$)</b><input type="number" id="pTC" step="0.1" value="${e.tc}" style="max-width:160px"></label></div>`;
+}
+function bindPlan(e, onSave){
+  const st = {match: +e.match, tope: +e.tope, vesting: +e.vesting};
+  $('pM').oninput = ev => { st.match = +ev.target.value; $('oM').textContent = '$' + st.match.toFixed(2); };
+  $('pT').oninput = ev => { st.tope = +ev.target.value; $('oT').textContent = pct(st.tope) + ' del sueldo'; };
+  root.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { st.vesting = +b.dataset.v; root.querySelectorAll('[data-v]').forEach(x => x.classList.toggle('on', x === b)); });
+  $('savePlan').onclick = async () => { try { const r = await api('PUT', '/api/empresa/plan', {...st, tc: $('pTC').value}); ME.empresa = r.empresa; toast('Plan guardado'); onSave(); } catch(err){ toast(err.message); } };
+}
+function planSetup(first){
+  root.innerHTML = `<div class="content" style="margin:0 auto"><h1>${first ? 'Configurá el beneficio de ' + esc(ME.empresa.nombre) : 'Plan'}</h1><p class="sub">${first ? 'Elegí cuánto pone la empresa. Después cargás a tus empleados.' : 'Los cambios aplican desde el próximo cierre.'}</p>
+    ${planForm(ME.empresa)}<button class="btn" id="savePlan">${first ? 'Guardar y continuar' : 'Guardar cambios'}</button></div>`;
+  bindPlan(ME.empresa, () => { VIEW = first ? 'empleados' : 'plan'; portal(); });
+}
+function portal(){
+  root.innerHTML = `<div class="portal"><aside class="side"><div class="co"><b>${esc(ME.empresa.nombre)}</b><span>Portal de RR.HH.</span></div>
+    ${[['inicio','⌂ Inicio'],['empleados','☰ Empleados'],['cierre','✓ Cierre del mes'],['plan','⚙ Plan']].map(i => `<a data-p="${i[0]}" class="${VIEW === i[0] ? 'on' : ''}">${i[1]}</a>`).join('')}</aside><div class="content" id="pc"><div class="empty">Cargando…</div></div></div>`;
+  root.querySelectorAll('[data-p]').forEach(a => a.onclick = () => { VIEW = a.dataset.p; portal(); });
+  ({inicio: pInicio, empleados: pEmpleados, cierre: pCierre, plan: pPlan})[VIEW]();
+}
+async function pInicio(){
+  const [r, pr] = await Promise.all([api('GET', '/api/empresa/resumen'), api('GET', '/api/precios')]);
+  const g = r.valorUsd - r.invertidoUsd;
+  let h = `<h1>Inicio</h1><p class="sub">Plan vigente: $${ME.empresa.match.toFixed(2)} por cada $1 del empleado, hasta ${pct(ME.empresa.tope)} del sueldo · ${ME.empresa.vesting ? 'vesting ' + ME.empresa.vesting + ' años' : 'sin vesting'}</p>`;
+  if (!r.empleados) h += `<div class="callout">Siguiente paso: <b>cargá a tus empleados</b> con su sueldo y mandales el link de invitación. <button class="btn sm" data-go="empleados" style="margin-left:6px">Cargar empleados</button></div>`;
+  else if (r.adheridos) h += `<div class="callout warn">Cuando liquides sueldos, aprobá el cierre del mes para registrar los aportes. <button class="btn sm" data-go="cierre" style="margin-left:6px">Ir al cierre</button></div>`;
+  else h += `<div class="callout">Hay ${r.empleados} empleado(s) invitados. Cuando se adhieran desde su link, aparecen en el cierre del mes.</div>`;
+  h += `<div class="kpis">
+    <div class="kpi"><div class="l">Adheridos</div><div class="v">${r.adheridos} / ${r.empleados}</div><div class="s">${r.empleados ? Math.round(r.adheridos / r.empleados * 100) : 0}% de los cargados</div></div>
+    <div class="kpi"><div class="l">Aportes de la empresa</div><div class="v">${money(r.aporteEmpresaUyu)}</div><div class="s">acumulado, ${r.meses} mes(es)</div></div>
+    <div class="kpi"><div class="l">Invertido por el equipo</div><div class="v">${usd(r.invertidoUsd)}</div><div class="s">empleados + empresa</div></div>
+    <div class="kpi"><div class="l">Valor actual</div><div class="v">${usd(r.valorUsd)}</div><div class="s" style="color:${col(g)}">${g >= 0 ? '+' : ''}${usd(g)} de rendimiento</div></div></div>
+    <div class="card"><h2>Precios de mercado</h2><table><tr><th>Fondo</th><th class="n">Último precio</th><th class="n">Actualizado</th></tr>
+    ${Object.entries(pr).map(([t, p]) => `<tr><td><b>${t}</b> <span class="note">${esc(p.nombre)}</span></td><td class="n">${p.actual ? usd(p.actual) : '—'}</td><td class="n note">${p.actualizado ? new Date(p.actualizado).toLocaleString('es-UY') : 'sin datos'}</td></tr>`).join('')}</table>
+    <p class="note" style="margin:8px 0 0">Fuente: Yahoo Finance. El sistema registra las cuotas de cada empleado a estos precios; la compra en el custodio la ejecuta el equipo (MVP).</p></div>`;
+  $('pc').innerHTML = h;
+  $('pc').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { VIEW = b.dataset.go; portal(); });
+}
+async function pEmpleados(){
+  const {empleados} = await api('GET', '/api/empresa/empleados');
+  const st = {invitado:['Invitado','p-warn'], adherido:['Adherido','p-good'], pausado:['En pausa','p-grey'], pendiente:['Pendiente','p-grey']};
+  const link = t => location.origin + '/invitacion/' + t;
+  $('pc').innerHTML = `<h1>Empleados</h1><p class="sub">Cargá a cada persona con su sueldo nominal. Cada uno recibe un link personal para crear su cuenta y adherirse.</p>
+    <div class="card"><h2>Agregar empleado</h2><div class="row">
+      <input type="text" id="nN" placeholder="Nombre y apellido" class="grow"><input type="email" id="nE" placeholder="Mail" class="grow"><input type="text" id="nC" placeholder="Cargo" class="grow">
+      <input type="number" id="nS" placeholder="Sueldo nominal ($)" step="1000" style="max-width:170px"><button class="btn" id="nAdd">Agregar</button></div></div>
+    <div class="card" style="padding:6px 8px">${empleados.length ? `<table><thead><tr><th>Empleado</th><th class="n">Sueldo</th><th>Estado</th><th class="n">Aporta</th><th class="n">Empresa</th><th>Fondo</th><th class="n">Valor</th><th></th></tr></thead><tbody>
+      ${empleados.map(p => `<tr><td><b>${esc(p.nombre)}</b><div class="note">${esc(p.cargo || '')}${p.email ? ' · ' + esc(p.email) : ''}</div></td>
+        <td class="n"><input type="number" data-sal="${p.id}" value="${p.sueldo}" step="1000" style="width:120px;text-align:right"></td>
+        <td><span class="pill ${st[p.estado][1]}">${st[p.estado][0]}</span>${p.estado === 'invitado' && p.cuentaCreada ? '<div class="note">Creó su cuenta</div>' : ''}</td>
+        <td class="n">${p.estado === 'adherido' ? pct(p.pct) : '—'}</td><td class="n">${p.estado === 'adherido' ? pct(p.aporteEmpresaPct) : '—'}</td><td>${p.estado === 'adherido' ? p.fondo : '—'}</td>
+        <td class="n">${p.valor ? usd(p.valor) : '—'}</td>
+        <td>${p.invitacion ? `<button class="btn sec sm" data-link="${esc(link(p.invitacion))}">Copiar invitación</button>` : ''} ${p.valor ? '' : `<button class="btn sec sm" data-del="${p.id}" title="Borrar">✕</button>`}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">Todavía no cargaste empleados.</div>'}</div>
+    <p class="note">Mandá el link de invitación por WhatsApp o mail. Es personal: sirve una sola vez para crear la cuenta.</p><div id="lk"></div>`;
+  $('nAdd').onclick = async () => { try { await api('POST', '/api/empresa/empleados', {nombre: $('nN').value, email: $('nE').value, cargo: $('nC').value, sueldo: $('nS').value}); toast('Empleado agregado'); pEmpleados(); } catch(e){ toast(e.message); } };
+  $('pc').querySelectorAll('[data-sal]').forEach(i => i.onchange = async () => { try { await api('PUT', '/api/empresa/empleados/' + i.dataset.sal, {sueldo: i.value}); toast('Sueldo actualizado'); } catch(e){ toast(e.message); } });
+  $('pc').querySelectorAll('[data-link]').forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.link); toast('Link copiado'); } catch(e){ $('lk').innerHTML = `<div class="copy">${esc(b.dataset.link)}</div>`; } });
+  $('pc').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (b.dataset.c !== '1'){ b.dataset.c = '1'; b.textContent = '¿Borrar?'; return; } try { await api('DELETE', '/api/empresa/empleados/' + b.dataset.del); pEmpleados(); } catch(e){ toast(e.message); } });
+}
+async function pCierre(periodo){
+  periodo = periodo || ymNow();
+  const [c, {cierres}] = await Promise.all([api('GET', '/api/empresa/cierre?periodo=' + periodo), api('GET', '/api/empresa/cierres')]);
+  const tE = c.lineas.reduce((s, l) => s + l.uyuEmpleado, 0), tC = c.lineas.reduce((s, l) => s + l.uyuEmpresa, 0);
+  let h = `<h1>Cierre del mes</h1><p class="sub">Con la liquidación de sueldos, aprobá los aportes del mes. El sistema registra las cuotas de cada empleado al precio de mercado de ese mes.</p>
+    <div class="card"><div class="row"><label class="f" style="margin:0"><b>Mes</b><input type="month" id="cP" value="${c.periodo}" max="${ymNow()}"></label>
+      <label class="f" style="margin:0"><b>Tipo de cambio ($/US$)</b><input type="number" id="cTC" step="0.1" value="${c.tc}" style="max-width:150px"></label>
+      ${Object.entries(c.precios).map(([t, p]) => `<label class="f" style="margin:0"><b>Precio ${t} (US$)</b><input type="number" data-px="${t}" step="0.01" value="${p ? (+p).toFixed(2) : ''}" placeholder="ingresar" style="max-width:140px"></label>`).join('')}</div>
+      <p class="note" style="margin:10px 0 0">Para meses pasados se usa el cierre de ese mes; para el mes en curso, el último precio. Podés corregirlo a mano.</p></div>`;
+  if (c.yaAprobado) h += `<div class="callout good">${per(c.periodo)} ya está aprobado.</div>`;
+  else if (!c.lineas.length) h += `<div class="card empty">No hay empleados adheridos todavía.</div>`;
+  else h += `<div class="card" style="padding:6px 8px"><table><thead><tr><th>Empleado</th><th>Fondo</th><th class="n">Aporte empleado</th><th class="n">Aporte empresa</th><th class="n">Total</th><th class="n">En US$</th></tr></thead><tbody>
+      ${c.lineas.map(l => `<tr><td>${esc(l.nombre)}<div class="note">${pct(l.pct)} de ${money(l.sueldo)} · empresa ${pct(l.coPct)}</div></td><td>${l.fondo}</td><td class="n">${money(l.uyuEmpleado)}</td><td class="n">${money(l.uyuEmpresa)}</td><td class="n">${money(l.uyuEmpleado + l.uyuEmpresa)}</td><td class="n" data-usd="${l.uyuEmpleado + l.uyuEmpresa}"></td></tr>`).join('')}
+      <tr class="tot"><td colspan="2">Total (${c.lineas.length})</td><td class="n">${money(tE)}</td><td class="n">${money(tC)}</td><td class="n">${money(tE + tC)}</td><td class="n" data-usd="${tE + tC}"></td></tr></tbody></table></div>
+      <div class="row"><button class="btn" id="cOk">Aprobar ${per(c.periodo)}</button><span class="note">Genera los descuentos de nómina, la transferencia al custodio y la orden de compra por subcuenta.</span></div>`;
+  h += `<div class="card" style="margin-top:16px"><h2>Cierres aprobados</h2>${cierres.length ? `<table><tr><th>Mes</th><th class="n">Tipo de cambio</th><th class="n">Total</th><th class="n">En US$</th></tr>${cierres.map(x => `<tr><td>${per(x.periodo)}</td><td class="n">${(+x.tc).toFixed(2)}</td><td class="n">${money(x.total_uyu)}</td><td class="n">${usd(x.total_usd)}</td></tr>`).join('')}</table>` : '<div class="empty">Todavía no hay cierres.</div>'}</div>`;
+  $('pc').innerHTML = h;
+  const upd = () => { const tc = +$('cTC').value || 1; $('pc').querySelectorAll('[data-usd]').forEach(td => td.textContent = usd(+td.dataset.usd / tc)); };
+  upd(); $('cTC').oninput = upd;
+  $('cP').onchange = () => pCierre($('cP').value);
+  const ok = $('cOk'); if (ok) ok.onclick = async () => {
+    ok.disabled = true;
+    const precios = {}; $('pc').querySelectorAll('[data-px]').forEach(i => precios[i.dataset.px] = +i.value);
+    try { const r = await api('POST', '/api/empresa/cierre', {periodo: c.periodo, tc: $('cTC').value, precios}); toast(`Aprobado: ${usd(r.totalUsd)} para ${r.personas} persona(s)`); pCierre(c.periodo); }
+    catch(e){ toast(e.message); ok.disabled = false; }
+  };
+}
+function pPlan(){
+  $('pc').innerHTML = `<h1>Plan</h1><p class="sub">Los cambios aplican desde el próximo cierre.</p>${planForm(ME.empresa)}<button class="btn" id="savePlan">Guardar cambios</button>`;
+  bindPlan(ME.empresa, () => portal());
+}
+
+// ================= EMPLEADO =================
+let C = null, ETAB = 'inicio', RANGE = 'todo', OB = {step: 0, pct: 4, fondo: 'URTH'};
+async function employee(){
+  C = await api('GET', '/api/empleado/cuenta');
+  if (C.empleado.estado === 'invitado') return onboarding();
+  root.innerHTML = `<div class="emp" id="ec"></div><div class="tabbar"><div>${[['inicio','⌂','Inicio'],['cuenta','↗','Mi cuenta'],['movs','≡','Movimientos'],['aporte','%','Mi aporte']].map(t => `<button data-e="${t[0]}" class="${ETAB === t[0] ? 'on' : ''}"><span>${t[1]}</span>${t[2]}</button>`).join('')}</div></div>`;
+  root.querySelectorAll('[data-e]').forEach(b => b.onclick = () => { ETAB = b.dataset.e; employee(); });
+  ({inicio: eInicio, cuenta: eCuenta, movs: eMovs, aporte: eAporte})[ETAB]();
+}
+function onboarding(){
+  const e = C.empleado, pl = C.empresa, s = OB.step;
+  const co = Math.min(OB.pct * pl.match, pl.tope), ue = e.sueldo * OB.pct / 100, uc = e.sueldo * co / 100;
+  let h = `<div class="emp">`;
+  if (s === 0) h += `<div class="note">Paso 1 de 3</div><h1>¿Cuánto querés ahorrar por mes?</h1>
+    <div class="mc"><div class="mv"><span>Tu sueldo nominal</span><b>${money(e.sueldo)}</b></div><p class="note" style="margin:6px 0 0">Lo cargó ${esc(pl.nombre)}. Si no es correcto, avisale a RR.HH.</p></div>
+    <div class="mc" style="text-align:center"><div class="big">${pct(OB.pct)}</div><div class="note">de tu sueldo · ${money(ue)} por mes</div><input type="range" id="oP" min="1" max="15" step="0.5" value="${OB.pct}" style="margin-top:10px"></div>
+    <div class="mc"><div class="mv"><span>Vos ponés</span><b>${money(ue)}</b></div><div class="mv"><span>${esc(pl.nombre)} pone</span><b style="color:var(--accent)">+ ${money(uc)}</b></div><div class="mv"><span>Se invierte por mes</span><b>${money(ue + uc)}</b></div></div>
+    ${OB.pct * pl.match > pl.tope ? `<p class="note">Arriba de ${pct(pl.tope / pl.match)} la empresa ya no suma más.</p>` : ''}
+    <button class="btn block" id="oN" style="margin-top:14px">Continuar</button>`;
+  else if (s === 1) h += `<div class="note">Paso 2 de 3</div><h1>¿Dónde querés invertir?</h1>
+    ${Object.entries(C.fondos).map(([t, f]) => `<button class="opt ${OB.fondo === t ? 'on' : ''}" data-f="${t}" style="width:100%;margin-top:10px"><b>${f.corto} · ${t}</b><span>${esc(f.nombre)}${C.precios[t]?.actual ? ' · hoy ' + usd(C.precios[t].actual) + ' por cuota' : ''}</span></button>`).join('')}
+    <p class="note" style="margin-top:10px">Ambos índices rindieron históricamente cerca de 10% anual en dólares, con años negativos. Rendimientos pasados no garantizan rendimientos futuros.</p>
+    <div class="row"><button class="btn sec" id="oB">Atrás</button><button class="btn grow" id="oN">Continuar</button></div>`;
+  else h += `<div class="note">Paso 3 de 3</div><h1>Autorizá el descuento</h1>
+    <div class="mc"><div class="mv"><span>Descuento mensual</span><b>${money(ue)}</b></div><div class="mv"><span>Aporte de ${esc(pl.nombre)}</span><b>${money(uc)}</b></div><div class="mv"><span>Inversión</span><span>${C.fondos[OB.fondo].corto} (${OB.fondo})</span></div><div class="mv"><span>Vesting del aporte de la empresa</span><span>${pl.vesting ? pl.vesting + ' años' : 'No tiene'}</span></div></div>
+    <div class="check"><input type="checkbox" id="oA"><label for="oA">Autorizo a ${esc(pl.nombre)} a descontar ${pct(OB.pct)} de mi sueldo para invertir en mi cuenta (Ley 17.829), y consiento la transferencia de mis datos al custodio en el exterior (Ley 18.331). Puedo cambiarlo o pausarlo cuando quiera.</label></div>
+    <div class="row"><button class="btn sec" id="oB">Atrás</button><button class="btn grow" id="oF" disabled>Confirmar y sumarme</button></div>`;
+  root.innerHTML = h + '</div>';
+  const n = $('oN'); if (n) n.onclick = () => { OB.step++; onboarding(); };
+  const b = $('oB'); if (b) b.onclick = () => { OB.step--; onboarding(); };
+  const p = $('oP'); if (p) p.oninput = ev => { OB.pct = +ev.target.value; onboarding(); };
+  root.querySelectorAll('[data-f]').forEach(x => x.onclick = () => { OB.fondo = x.dataset.f; onboarding(); });
+  const a = $('oA'); if (a) a.onchange = () => $('oF').disabled = !a.checked;
+  const f = $('oF'); if (f) f.onclick = async () => { try { await api('PUT', '/api/empleado/adhesion', {pct: OB.pct, fondo: OB.fondo, autorizo: true}); toast('¡Listo! Tu primer aporte se invierte en el próximo cierre'); employee(); } catch(e){ toast(e.message); } };
+}
+function eInicio(){
+  const e = C.empleado, k = C.cuenta, pl = C.empresa;
+  const tot = k.valor || 0, pOwn = tot ? k.valorPropio / tot * 100 : 50, pV = tot ? k.valorEmpresa * k.vesting / tot * 100 : 0;
+  $('ec').innerHTML = `<div class="note">Hola, ${esc(e.nombre.split(' ')[0])}</div>
+    ${e.estado === 'pausado' ? '<div class="callout warn" style="margin-top:10px">Tu aporte está en pausa. Lo podés retomar en "Mi aporte".</div>' : ''}
+    <div class="note" style="margin-top:12px">Tu inversión</div><div class="big">${usd(tot)}</div>
+    ${k.meses ? `<div style="font-size:13px;font-weight:600;color:${col(k.ganancia)}">${k.ganancia >= 0 ? '▲' : '▼'} ${usd(Math.abs(k.ganancia))} de rendimiento (${sgn(k.rendimiento)})</div>
+      <div class="stack"><i style="width:${pOwn}%;background:var(--ink)"></i><i style="width:${pV}%;background:var(--accent)"></i><i style="width:${Math.max(0, 100 - pOwn - pV)}%;background:var(--grey)"></i></div>
+      <div class="leg"><span style="--c:var(--ink)">Tuyo</span><span style="--c:var(--accent)">Empresa, ya adquirido</span><span style="--c:var(--grey)">Empresa, en vesting</span></div>`
+      : `<div class="mc"><b>Ya estás adherido ✓</b><p class="note" style="margin:4px 0 0">Tu primera inversión se registra cuando ${esc(pl.nombre)} apruebe el cierre del mes.</p></div>`}
+    <div class="mc"><h3>Cada mes se invierte</h3><div class="mv"><span>Vos (${pct(e.pct)})</span><b>${money(e.sueldo * e.pct / 100)}</b></div><div class="mv"><span>${esc(pl.nombre)} (${pct(e.coPct)})</span><b style="color:var(--accent)">+ ${money(e.sueldo * e.coPct / 100)}</b></div><div class="mv"><span>En</span><span>${C.fondos[e.fondo].corto} (${e.fondo})</span></div></div>
+    ${pl.vesting && k.meses ? `<div class="mc"><h3>Vesting del aporte de la empresa</h3><div class="stack" style="margin:6px 0"><i style="width:${k.vesting * 100}%;background:var(--accent)"></i></div>
+      <p style="margin:0;font-size:13px"><b>${Math.round(k.vesting * 100)}% adquirido.</b> ${k.proxVesting ? `En <b>${per(k.proxVesting.periodo)}</b> pasás a ${Math.round(k.proxVesting.frac * 100)}%.` : 'Ya es todo tuyo.'}</p>
+      <p class="note" style="margin:6px 0 0">Si te vas hoy te llevás <b>${usd(k.siTeVas)}</b>.</p></div>` : ''}`;
+}
+function eCuenta(){
+  const k = C.cuenta, P = C.puntos;
+  if (!k.meses){ $('ec').innerHTML = '<h1>Mi cuenta</h1><div class="empty">Vas a ver tu cuenta después del primer cierre.</div>'; return; }
+  const n = RANGE === '6m' ? 7 : RANGE === '1a' ? 13 : P.length, view = P.slice(-Math.min(n, P.length));
+  const W = 340, H = 160, L = 4, R = 336, T = 10, B = 140, max = Math.max(...view.map(p => Math.max(p.valor, p.aportado))) * 1.06 || 1;
+  const x = i => view.length > 1 ? L + i / (view.length - 1) * (R - L) : (L + R) / 2, y = v => B - v / max * (B - T);
+  const line = view.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.valor).toFixed(1)}`).join(' ');
+  const area = view.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.aportado).toFixed(1)}`).join(' ') + ` L${x(view.length - 1)},${B} L${x(0)},${B} Z`;
+  const first = view[0], last = view[view.length - 1], dep = last.aportado - first.aportado;
+  const varPer = RANGE === 'todo' ? last.valor - last.aportado : last.valor - first.valor - dep;
+  const lm = P.length > 1 ? P[P.length - 2] : null, lmDep = lm ? last.aportado - lm.aportado : 0, lmR = lm && lm.valor ? (last.valor - lm.valor - lmDep) / lm.valor : null;
+  const pxs = Object.entries(k.cuotas);
+  $('ec').innerHTML = `<h1>Mi cuenta</h1>
+    <div class="note" style="margin-top:8px">Valor de la cuenta</div><div class="big">${usd(k.valor)}</div>
+    <div style="font-size:13px;font-weight:600;color:${col(varPer)}">${varPer >= 0 ? '▲' : '▼'} ${usd(Math.abs(varPer))} ${RANGE === 'todo' ? 'desde el inicio' : RANGE === '1a' ? 'en el último año' : 'en los últimos 6 meses'} <span class="note" style="font-weight:400">(sin contar aportes)</span></div>
+    <div class="row" style="gap:6px;margin:12px 0 4px">${[['6m','6M'],['1a','1A'],['todo','Desde inicio']].map(o => `<button class="btn sm ${RANGE === o[0] ? '' : 'sec'}" data-r="${o[0]}" style="flex:1">${o[1]}</button>`).join('')}</div>
+    <svg viewBox="0 0 ${W} ${H + 14}" width="100%" role="img" aria-label="Valor de la cuenta frente a lo aportado"><path d="${line} L${x(view.length - 1)},${B} L${x(0)},${B} Z" fill="#1f6feb" fill-opacity=".1"/><path d="${area}" fill="#c5c9d0" fill-opacity=".6"/><path d="${line}" fill="none" stroke="#1f6feb" stroke-width="2.2" stroke-linejoin="round"/><circle cx="${x(view.length - 1)}" cy="${y(last.valor)}" r="3.5" fill="#1f6feb"/>
+      <text x="${L}" y="${H + 10}" font-size="10" fill="#5d6675">${per(first.periodo)}</text><text x="${R}" y="${H + 10}" font-size="10" fill="#5d6675" text-anchor="end">${per(last.periodo)}</text></svg>
+    <div class="leg"><span style="--c:#1f6feb">Valor de la cuenta</span><span style="--c:#c5c9d0">Lo que se aportó</span></div>
+    <div class="grid2">
+      <div class="kpi"><div class="l">Rendimiento anualizado</div><div class="v" style="font-size:19px;color:${col(k.tirAnual ?? 0)}">${sgn(k.tirAnual)}</div><div class="s">TIR desde el inicio</div></div>
+      <div class="kpi"><div class="l">Rendimiento acumulado</div><div class="v" style="font-size:19px;color:${col(k.rendimiento ?? 0)}">${sgn(k.rendimiento)}</div><div class="s">sobre lo aportado</div></div>
+      <div class="kpi"><div class="l">Ganancia total</div><div class="v" style="font-size:19px">${usd(k.ganancia)}</div><div class="s">desde ${per(k.inicio)}</div></div>
+      <div class="kpi"><div class="l">Último mes</div><div class="v" style="font-size:19px;color:${col(lmR ?? 0)}">${sgn(lmR)}</div><div class="s">${per(last.periodo)}</div></div></div>
+    <div class="mc"><h3>Tu cartera</h3>${pxs.map(([t, q]) => `<div class="mv"><span><b>${t}</b><small>${esc(C.fondos[t].nombre)}</small></span><span style="text-align:right"><b>${usd(q * C.precios[t].actual)}</b><small>${q.toFixed(4)} cuotas × ${usd(C.precios[t].actual)}</small></span></div>`).join('')}
+      <p class="note" style="margin:6px 0 0">Precio de mercado${C.precios[pxs[0][0]].actualizado ? ' al ' + new Date(C.precios[pxs[0][0]].actualizado).toLocaleString('es-UY') : ''} · fuente Yahoo Finance.</p></div>
+    <div class="mc"><h3>Composición del valor</h3>
+      <div class="mv"><span>Tus aportes</span><b>${usd(k.aportadoPropioUsd)}</b></div><div class="mv"><span>Aportes de ${esc(C.empresa.nombre)}</span><b style="color:var(--accent)">${usd(k.aportadoEmpresaUsd)}</b></div>
+      <div class="mv"><span>Rendimiento</span><b style="color:${col(k.ganancia)}">${usd(k.ganancia)}</b></div><div class="mv"><span><b>Valor de la cuenta</b></span><b>${usd(k.valor)}</b></div>
+      <div class="mv"><span>Si te vas hoy te llevás</span><b>${usd(k.siTeVas)}</b></div></div>
+    <div class="mc"><h3>Datos de la cuenta</h3><div class="mv"><span>Inicio</span><span>${per(k.inicio)}</span></div><div class="mv"><span>Meses con aportes</span><span>${k.meses}</span></div><div class="mv"><span>Custodio</span><span>Interactive Brokers</span></div></div>
+    <p class="note">Valores en dólares. Rendimientos pasados no garantizan rendimientos futuros.</p>`;
+  $('ec').querySelectorAll('[data-r]').forEach(b => b.onclick = () => { RANGE = b.dataset.r; eCuenta(); });
+}
+function eMovs(){
+  $('ec').innerHTML = `<h1>Movimientos</h1>` + (C.movimientos.length ? `<div class="mc">${C.movimientos.map(m => `<div class="mv"><span>Compra ${m.fondo} · ${per(m.periodo)}<small>${m.cuotas.toFixed(4)} cuotas a ${usd(m.precio)} · vos ${usd(m.usdEmpleado)} + empresa ${usd(m.usdEmpresa)}</small></span><b>+ ${usd(m.usd)}</b></div>`).join('')}</div>` : '<div class="empty">Todavía no hay movimientos.</div>');
+}
+function eAporte(){
+  const e = C.empleado, pl = C.empresa; let v = e.pct, f = e.fondo;
+  const draw = () => {
+    const co = Math.min(v * pl.match, pl.tope);
+    $('ec').innerHTML = `<h1>Mi aporte</h1><div class="mc" style="text-align:center"><div class="big">${pct(v)}</div><div class="note">${money(e.sueldo * v / 100)} por mes · la empresa suma ${money(e.sueldo * co / 100)}</div><input type="range" id="aP" min="1" max="15" step="0.5" value="${v}" style="margin-top:10px"></div>
+      <div class="mc"><h3>Dónde invertir los próximos aportes</h3>${Object.entries(C.fondos).map(([t, x]) => `<button class="opt ${f === t ? 'on' : ''}" data-f="${t}" style="width:100%;margin-top:8px"><b>${x.corto} · ${t}</b></button>`).join('')}</div>
+      <button class="btn block" id="aS" style="margin-top:14px">Guardar cambios</button>
+      <button class="btn sec block" id="aZ" style="margin-top:8px">${e.estado === 'pausado' ? 'Retomar mi aporte' : 'Pausar mi aporte'}</button><p class="note">Los cambios aplican desde el próximo cierre.</p>`;
+    $('aP').oninput = ev => { v = +ev.target.value; draw(); };
+    $('ec').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { f = b.dataset.f; draw(); });
+    $('aS').onclick = async () => { try { await api('PUT', '/api/empleado/aporte', {pct: v, fondo: f}); toast('Aporte actualizado'); employee(); } catch(err){ toast(err.message); } };
+    $('aZ').onclick = async () => { try { await api('PUT', '/api/empleado/aporte', {pausar: e.estado !== 'pausado'}); toast(e.estado === 'pausado' ? 'Aporte retomado' : 'Aporte pausado'); employee(); } catch(err){ toast(err.message); } };
+  };
+  draw();
+}
+
+boot().catch(e => { root.innerHTML = `<div class="auth"><div class="card"><h1>No se pudo cargar</h1><p class="sub">${esc(e.message)}</p></div></div>`; });
+})();
+</script>
+</body>
+</html>
