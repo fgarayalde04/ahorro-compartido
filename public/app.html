@@ -118,7 +118,7 @@ async function api(method, url, body){
 const QS = location.search; let ME = null, VIEW = 'inicio', AUTHTAB = QS.includes('registro') ? 'registro' : 'login', QUIEN = QS.includes('empleado') ? 'empleado' : QS.includes('empresa') ? 'empresa' : '';
 
 async function boot(){
-  if (location.pathname === '/simulacion'){ root.innerHTML = '<div class="auth"><div class="card"><h1>Preparando la simulación…</h1><p class="sub">Creamos una empresa de ejemplo con empleados y casi dos años de aportes a precios reales de mercado.</p></div></div>'; await api('POST', '/api/simulacion/iniciar'); history.replaceState(null, '', '/app'); VIEW = 'inicio'; }
+  if (location.pathname === '/simulacion'){ root.innerHTML = '<div class="auth"><div class="card"><h1>Preparando el ejemplo…</h1><p class="sub">Creamos una empresa de ejemplo con empleados y casi dos años de aportes a precios reales de mercado.</p></div></div>'; await api('POST', '/api/simulacion/iniciar', {como: location.search.includes('empleado') ? 'empleado' : 'empresa'}); history.replaceState(null, '', '/app'); VIEW = 'inicio'; ETAB = 'inicio'; }
   const inv = location.pathname.match(/^\/invitacion\/([\w-]+)/);
   ME = await api('GET', '/api/me');
   await simBar();
@@ -163,6 +163,7 @@ function authView(){
       <label class="f"><b>Contraseña (mínimo 8 caracteres)</b><input type="password" id="rPass" autocomplete="new-password"></label>
       <button class="btn block" id="go">Crear cuenta y configurar el plan</button>`}
     <p class="note" id="err" style="color:var(--bad);margin-top:10px"></p></div>
+    ${AUTHTAB === 'login' ? `<a class="btn sec block" href="/simulacion${QUIEN === 'empleado' ? '?empleado' : ''}" style="margin-bottom:14px;border:2px dashed #ffb347;background:#fff8ee">Ver un ejemplo sin registrarme${QUIEN === 'empleado' ? ' (cuenta de un empleado)' : QUIEN === 'empresa' ? ' (portal de una empresa)' : ''}</a>` : ''}
     <p class="note" style="text-align:center">MVP de un proyecto de Nuevos Emprendimientos · Universidad ORT Uruguay</p></div>`;
   root.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { AUTHTAB = b.dataset.t; authView(); });
   $('go').onclick = async () => {

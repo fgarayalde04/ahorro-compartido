@@ -32,6 +32,7 @@ a{color:inherit}
 .pick span.go{color:var(--accent);font-weight:700}
 .hero .alt{margin-top:22px;color:#c8d3e6;font-size:14px}
 .hero .alt a{color:#fff;font-weight:600}
+.pick .ex{display:block;margin-top:10px;font-size:13px;color:var(--muted)}
 section{max-width:1100px;margin:0 auto;padding:56px 24px}
 section h2.t{font-size:28px;margin:0 0 8px;letter-spacing:-.01em}
 .lead{color:var(--muted);margin:0 0 26px;font-size:16px}
@@ -58,8 +59,8 @@ section h2.t{font-size:28px;margin:0 0 8px;letter-spacing:-.01em}
   <h1>Tu equipo ahorra en dólares. Tu empresa iguala cada peso.</h1>
   <p>Un beneficio de ahorro con aporte de la empresa, invertido en fondos indexados globales (MSCI World o S&P 500), en una cuenta a nombre de cada empleado.</p>
   <div class="pick">
-    <a href="/app?empresa"><div class="ic">🏢</div><h2>Soy empresa</h2><p>Mirá a todo tu equipo, cómo está configurado cada empleado y aprobá los aportes del mes.</p><span class="go">Ingresar al portal →</span></a>
-    <a href="/app?empleado"><div class="ic">👤</div><h2>Soy empleado</h2><p>Mirá tu cuenta: saldo, rendimiento, cuánto aporta tu empresa y tus movimientos.</p><span class="go">Ver mi cuenta →</span></a>
+    <a href="/app?empresa"><div class="ic">🏢</div><h2>Soy empresa</h2><p>Mirá a todo tu equipo, cómo está configurado cada empleado y aprobá los aportes del mes.</p><span class="go">Ingresar al portal →</span><span class="ex" onclick="event.preventDefault();location.href='/simulacion'">o <u>ver un ejemplo sin registrarte</u></span></a>
+    <a href="/app?empleado"><div class="ic">👤</div><h2>Soy empleado</h2><p>Mirá tu cuenta: saldo, rendimiento, cuánto aporta tu empresa y tus movimientos.</p><span class="go">Ver mi cuenta →</span><span class="ex" onclick="event.preventDefault();location.href='/simulacion?empleado'">o <u>ver un ejemplo sin registrarte</u></span></a>
   </div>
   <div class="alt">¿Tu empresa todavía no lo ofrece? <a href="/app?registro">Comenzá un plan</a> o <a href="/simulador">simulá cuánto costaría</a>.</div>
 </div></div>

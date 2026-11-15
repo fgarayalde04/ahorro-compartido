@@ -243,7 +243,10 @@ async function crearSimulacion() {
 app.post('/api/simulacion/iniciar', wrap(async (req, res) => {
   const u = await currentUser(req);
   if (u) { const e = await one('SELECT demo FROM empresas WHERE id=$1', [u.empresa_id]); if (e?.demo) await borrarEmpresa(u.empresa_id); }
-  await startSession(req, res, await crearSimulacion());
+  const rrhhId = await crearSimulacion();
+  let destino = rrhhId;
+  if (req.body?.como === 'empleado') { const e = await one('SELECT empresa_id FROM usuarios WHERE id=$1', [rrhhId]); const emp = await one(`SELECT id FROM usuarios WHERE empresa_id=$1 AND rol='empleado' ORDER BY id LIMIT 1`, [e.empresa_id]); if (emp) destino = emp.id; }
+  await startSession(req, res, destino);
   res.json({ ok: true });
 }));
 app.get('/api/simulacion/perfiles', auth(), wrap(async (req, res) => {
