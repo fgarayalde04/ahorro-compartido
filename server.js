@@ -128,6 +128,10 @@ async function saldos(empresaId) {
   const px = {}; for (const t of Object.keys(FONDOS)) px[t] = (await serie(t)).actual;
   const out = {};
   movs.forEach(m => { const o = out[m.empleado_id] || (out[m.empleado_id] = { valor: 0, invertido: 0 }); o.valor += (+m.ce + +m.cc) * (px[m.fondo] || 0); o.invertido += +m.usd; });
+  const ini = await q('SELECT empleado_id, MIN(periodo) AS inicio, COUNT(DISTINCT periodo) AS meses FROM movimientos WHERE empresa_id=$1 GROUP BY empleado_id', [empresaId]);
+  const e = await one('SELECT vesting FROM empresas WHERE id=$1', [empresaId]), hoy = ym(new Date());
+  ini.forEach(r => { const o = out[r.empleado_id] || (out[r.empleado_id] = { valor: 0, invertido: 0 }); const m = monthsBetween(r.inicio, hoy);
+    o.inicio = r.inicio; o.meses = +r.meses; o.vesting = +e.vesting === 0 ? 1 : Math.min(Math.floor(m / 12) / +e.vesting, 1); });
   return out;
 }
 
@@ -136,7 +140,7 @@ app.get('/api/empresa/empleados', auth('empresa'), wrap(async (req, res) => {
   const e = await one('SELECT * FROM empresas WHERE id=$1', [req.user.empresa_id]);
   const s = await saldos(req.user.empresa_id);
   res.json({ empleados: rows.map(r => ({ id: r.id, nombre: r.nombre, email: r.email, cargo: r.cargo, sueldo: +r.sueldo, estado: r.estado, pct: +r.pct, fondo: r.fondo,
-    aporteEmpresaPct: r.estado === 'adherido' ? coPct(r, e) : 0, invitacion: r.invite_token, cuentaCreada: !r.invite_token, valor: s[r.id]?.valor || 0, invertido: s[r.id]?.invertido || 0 })) });
+    aporteEmpresaPct: r.estado === 'adherido' ? coPct(r, e) : 0, invitacion: r.invite_token, cuentaCreada: !r.invite_token, valor: s[r.id]?.valor || 0, invertido: s[r.id]?.invertido || 0, inicio: s[r.id]?.inicio || null, meses: s[r.id]?.meses || 0, vesting: s[r.id]?.vesting ?? null })) });
 }));
 
 app.post('/api/empresa/empleados', auth('empresa'), wrap(async (req, res) => {
