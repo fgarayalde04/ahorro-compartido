@@ -62,6 +62,22 @@ const empresaJSON = e => e && ({ id: e.id, nombre: e.nombre, rut: e.rut, cantEmp
 const ibkrId = (v, letra) => { const x = String(v ?? '').toUpperCase().replace(/\s/g, ''); if (!x) return ''; return new RegExp('^' + letra + '\\d{5,9}$').test(x) ? x : null; };
 const coPct = (emp, e) => Math.min(+emp.pct * +e.match, +e.tope);
 
+// completa con números de ejemplo la cuenta maestra y las subcuentas que falten
+const digitos = n => String(Math.floor(Math.random() * 10 ** n)).padStart(n, '0');
+async function completarIbkr(empresaId) {
+  const e = await one('SELECT ibkr_cuenta FROM empresas WHERE id=$1', [empresaId]);
+  if (!e) return 0;
+  if (!e.ibkr_cuenta) await q('UPDATE empresas SET ibkr_cuenta=$2 WHERE id=$1', [empresaId, 'F' + digitos(7)]);
+  const faltan = await q(`SELECT id FROM empleados WHERE empresa_id=$1 AND ibkr_cuenta IS NULL`, [empresaId]);
+  for (const x of faltan) {
+    let u; do { u = 'U' + digitos(7); } while (await one('SELECT id FROM empleados WHERE ibkr_cuenta=$1', [u]));
+    await q('UPDATE empleados SET ibkr_cuenta=$2 WHERE id=$1', [x.id, u]);
+  }
+  const movs = await q('SELECT DISTINCT empleado_id FROM movimientos WHERE empresa_id=$1 AND ibkr_cuenta IS NULL', [empresaId]);
+  for (const m of movs) await q('UPDATE movimientos SET ibkr_cuenta=(SELECT ibkr_cuenta FROM empleados WHERE id=$1) WHERE empleado_id=$1 AND ibkr_cuenta IS NULL', [m.empleado_id]);
+  return faltan.length;
+}
+
 // ---------- auth ----------
 app.post('/api/auth/registro', wrap(async (req, res) => {
   const b = req.body || {};
@@ -277,7 +293,7 @@ async function crearSimulacion() {
     const mail = `empleado${i + 1}-${suf}@simulacion.local`;
     const nunca = g[5] === null;
     const em = await one('INSERT INTO empleados (empresa_id, nombre, email, cargo, sueldo, estado, pct, fondo, invite_token, autorizado, ibkr_cuenta) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id',
-      [e.id, g[0], mail, g[1], g[2], 'invitado', g[3], g[4], nunca ? token() : null, nunca ? null : new Date(), nunca ? null : 'U' + dig(7)]);
+      [e.id, g[0], mail, g[1], g[2], 'invitado', g[3], g[4], nunca ? token() : null, nunca ? null : new Date(), 'U' + dig(7)]);
     if (!nunca) await q('INSERT INTO usuarios (email, nombre, hash, rol, empresa_id, empleado_id) VALUES ($1,$2,$3,$4,$5,$6)', [mail, g[0], 'sim', 'empleado', e.id, em.id]);
     ids.push(em.id);
   }
@@ -323,6 +339,12 @@ app.post('/api/simulacion/salir', auth(), wrap(async (req, res) => {
   const e = await one('SELECT demo FROM empresas WHERE id=$1', [req.user.empresa_id]);
   if (e?.demo) await borrarEmpresa(req.user.empresa_id);
   res.setHeader('Set-Cookie', 'ac_s=; Path=/; Max-Age=0'); res.json({ ok: true });
+}));
+
+app.post('/api/empresa/ibkr/ejemplo', auth('empresa'), wrap(async (req, res) => {
+  const n = await completarIbkr(req.user.empresa_id);
+  const e = await one('SELECT * FROM empresas WHERE id=$1', [req.user.empresa_id]);
+  res.json({ ok: true, completadas: n, empresa: empresaJSON(e) });
 }));
 
 app.get('/api/empresa/cierres', auth('empresa'), wrap(async (req, res) => {
@@ -474,5 +496,7 @@ init().then(() => {
   app.listen(PORT, () => console.log(`Ahorro Compartido escuchando en el puerto ${PORT}`));
   Object.keys(FONDOS).forEach(t => refrescar(t).catch(() => {}));
   limpiarSimulaciones().catch(e => console.warn(e.message));
+  // completa con ejemplos las subcuentas de IBKR de las empresas que ya existían antes de agregarlas
+  q('SELECT id FROM empresas').then(async es => { let n = 0; for (const e of es) n += await completarIbkr(e.id); if (n) console.log(`Subcuentas IBKR de ejemplo asignadas: ${n}`); }).catch(e => console.warn(e.message));
   setInterval(() => limpiarSimulaciones().catch(e => console.warn(e.message)), 60 * 60 * 1000);
 }).catch(e => { console.error('No se pudo iniciar la base de datos', e); process.exit(1); });
