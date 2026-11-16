@@ -1,7 +1,7 @@
 // Ahorro Compartido · servidor
 //  /            página del producto (empresas y empleados)
 //  /app         producto: registro de empresas, portal de RR.HH., invitaciones y cuenta del empleado
-//  /encuesta    encuesta para empleados (validación de demanda)
+//  /encuesta    redirige a la encuesta para empleados (formulario de Google del equipo)
 //  /admin       panel del equipo con los resultados del MVP
 const express = require('express');
 const path = require('path');
@@ -490,6 +490,9 @@ app.get('/api/admin/csv', wrap(async (req, res) => {
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 app.get(['/app', '/simulacion', '/invitacion/:t'], (req, res) => res.sendFile(path.join(PUB, 'app.html')));
+// la encuesta oficial del equipo es el formulario de Google: /encuesta redirige ahí
+const ENCUESTA_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdcytjWTgzP7nvgvriXt7L7L-aS46kBe0qUdVmH8FiSiXyqhg/viewform';
+app.get(['/encuesta', '/encuesta.html'], (req, res) => res.redirect(302, ENCUESTA_URL));
 app.use(express.static(PUB, { extensions: ['html'] }));
 
 init().then(() => {

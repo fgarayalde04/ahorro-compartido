@@ -94,7 +94,7 @@ function render(ev){
   const csv = t => `/api/admin/csv?tipo=${t}&key=${encodeURIComponent(KEY)}`;
   const fmtD = d => new Date(d).toLocaleString('es-UY', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
   $('app').innerHTML = `
-  <h1>Resultados del MVP</h1><p class="sub">Datos en vivo de la encuesta para empleados, los pedidos de propuesta y las entrevistas registradas. Actualizado: ${new Date().toLocaleString('es-UY')} <button class="btn sec sm" id="rf">Actualizar</button></p>
+  <h1>Resultados del MVP</h1><div class="card" style="margin:10px 0"><b>Encuesta a empleados:</b> se responde en el <a href="https://docs.google.com/forms/d/e/1FAIpQLSdcytjWTgzP7nvgvriXt7L7L-aS46kBe0qUdVmH8FiSiXyqhg/viewform" target="_blank" rel="noopener">formulario de Google del equipo</a> y las respuestas están en su planilla. Este panel muestra los pedidos de propuesta y las entrevistas registradas.</div><p class="sub">Datos en vivo de la encuesta para empleados, los pedidos de propuesta y las entrevistas registradas. Actualizado: ${new Date().toLocaleString('es-UY')} <button class="btn sec sm" id="rf">Actualizar</button></p>
   <div class="kpis">
     <div class="kpi"><div class="l">Visitas a la encuesta</div><div class="v">${vis.length}</div></div>
     <div class="kpi"><div class="l">Empezaron el cálculo</div><div class="v">${ini.length}</div><div class="s">${pc(ini.length, vis.length) ?? '—'}% de las visitas</div></div>
