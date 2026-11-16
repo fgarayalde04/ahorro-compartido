@@ -23,6 +23,7 @@ const SCHEMA = [
     fee INTEGER NOT NULL DEFAULT 250, tc NUMERIC NOT NULL DEFAULT 40, plan_ok BOOLEAN NOT NULL DEFAULT false,
     creado TIMESTAMPTZ NOT NULL DEFAULT now())`,
   `ALTER TABLE empresas ADD COLUMN IF NOT EXISTS demo BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE empresas ADD COLUMN IF NOT EXISTS ibkr_cuenta TEXT`,
   `CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, nombre TEXT, hash TEXT NOT NULL, rol TEXT NOT NULL,
     empresa_id INTEGER, empleado_id INTEGER, creado TIMESTAMPTZ NOT NULL DEFAULT now())`,
@@ -40,6 +41,8 @@ const SCHEMA = [
     periodo TEXT NOT NULL, fondo TEXT NOT NULL, uyu_empleado NUMERIC NOT NULL, uyu_empresa NUMERIC NOT NULL,
     usd_empleado NUMERIC NOT NULL, usd_empresa NUMERIC NOT NULL, precio NUMERIC NOT NULL,
     cuotas_empleado NUMERIC NOT NULL, cuotas_empresa NUMERIC NOT NULL, creado TIMESTAMPTZ NOT NULL DEFAULT now())`,
+  `ALTER TABLE empleados ADD COLUMN IF NOT EXISTS ibkr_cuenta TEXT`,
+  `ALTER TABLE movimientos ADD COLUMN IF NOT EXISTS ibkr_cuenta TEXT`,
   `CREATE TABLE IF NOT EXISTS precios (
     ticker TEXT NOT NULL, periodo TEXT NOT NULL, close NUMERIC NOT NULL, actualizado TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (ticker, periodo))`

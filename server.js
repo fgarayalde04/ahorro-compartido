@@ -57,7 +57,9 @@ app.use('/api/', (req, res, next) => {
 });
 
 const planDe = e => ({ match: +e.match, tope: +e.tope, vesting: +e.vesting, fee: +e.fee, tc: +e.tc, planOk: e.plan_ok });
-const empresaJSON = e => e && ({ id: e.id, nombre: e.nombre, rut: e.rut, cantEmpleados: e.cant_empleados, simulacion: !!e.demo, ...planDe(e) });
+const empresaJSON = e => e && ({ id: e.id, nombre: e.nombre, rut: e.rut, cantEmpleados: e.cant_empleados, simulacion: !!e.demo, ibkr: e.ibkr_cuenta || '', ...planDe(e) });
+// cuentas de Interactive Brokers: la empresa opera una cuenta maestra de asesor (F…) y cada empleado tiene una subcuenta a su nombre (U…)
+const ibkrId = (v, letra) => { const x = String(v ?? '').toUpperCase().replace(/\s/g, ''); if (!x) return ''; return new RegExp('^' + letra + '\\d{5,9}$').test(x) ? x : null; };
 const coPct = (emp, e) => Math.min(+emp.pct * +e.match, +e.tope);
 
 // ---------- auth ----------
@@ -118,6 +120,11 @@ app.post('/api/invitacion/:t', wrap(async (req, res) => {
 // ---------- empresa ----------
 app.put('/api/empresa/plan', auth('empresa'), wrap(async (req, res) => {
   const b = req.body || {};
+  if (b.ibkr !== undefined) {
+    const ib = ibkrId(b.ibkr, 'F');
+    if (ib === null) return res.status(400).json({ error: 'La cuenta maestra de Interactive Brokers empieza con F y sigue con números (ej. F1234567)' });
+    await q('UPDATE empresas SET ibkr_cuenta=$2 WHERE id=$1', [req.user.empresa_id, ib || null]);
+  }
   const e = await one('UPDATE empresas SET match=$2, tope=$3, vesting=$4, tc=$5, plan_ok=true WHERE id=$1 RETURNING *',
     [req.user.empresa_id, num(b.match, 0.1, 1, 1), num(b.tope, 0.5, 15, 15), [0, 3, 5].includes(+b.vesting) ? +b.vesting : 3, num(b.tc, 1, 1000, 40)]);
   res.json({ empresa: empresaJSON(e) });
@@ -140,7 +147,7 @@ app.get('/api/empresa/empleados', auth('empresa'), wrap(async (req, res) => {
   const e = await one('SELECT * FROM empresas WHERE id=$1', [req.user.empresa_id]);
   const s = await saldos(req.user.empresa_id);
   res.json({ empleados: rows.map(r => ({ id: r.id, nombre: r.nombre, email: r.email, cargo: r.cargo, sueldo: +r.sueldo, estado: r.estado, pct: +r.pct, fondo: r.fondo,
-    aporteEmpresaPct: r.estado === 'adherido' ? coPct(r, e) : 0, invitacion: r.invite_token, cuentaCreada: !r.invite_token, valor: s[r.id]?.valor || 0, invertido: s[r.id]?.invertido || 0, inicio: s[r.id]?.inicio || null, meses: s[r.id]?.meses || 0, vesting: s[r.id]?.vesting ?? null })) });
+    aporteEmpresaPct: r.estado === 'adherido' ? coPct(r, e) : 0, invitacion: r.invite_token, ibkr: r.ibkr_cuenta || '', cuentaCreada: !r.invite_token, valor: s[r.id]?.valor || 0, invertido: s[r.id]?.invertido || 0, inicio: s[r.id]?.inicio || null, meses: s[r.id]?.meses || 0, vesting: s[r.id]?.vesting ?? null })) });
 }));
 
 app.post('/api/empresa/empleados', auth('empresa'), wrap(async (req, res) => {
@@ -156,6 +163,13 @@ app.put('/api/empresa/empleados/:id', auth('empresa'), wrap(async (req, res) => 
   const emp = await one('SELECT * FROM empleados WHERE id=$1 AND empresa_id=$2', [req.params.id, req.user.empresa_id]);
   if (!emp) return res.status(404).json({ error: 'No encontrado' });
   const b = req.body || {};
+  if (b.ibkr !== undefined) {
+    const ib = ibkrId(b.ibkr, 'U');
+    if (ib === null) return res.status(400).json({ error: 'La subcuenta de Interactive Brokers empieza con U y sigue con números (ej. U1234567)' });
+    if (ib && await one('SELECT id FROM empleados WHERE ibkr_cuenta=$1 AND id<>$2', [ib, emp.id])) return res.status(409).json({ error: 'Esa subcuenta ya está asignada a otra persona' });
+    await q('UPDATE empleados SET ibkr_cuenta=$2 WHERE id=$1', [emp.id, ib || null]);
+    return res.json({ ok: true, ibkr: ib });
+  }
   await q('UPDATE empleados SET sueldo=$2, cargo=$3, nombre=$4 WHERE id=$1', [emp.id, num(b.sueldo ?? emp.sueldo, 1, 1e8, emp.sueldo), String(b.cargo ?? emp.cargo ?? '').slice(0, 120), String(b.nombre ?? emp.nombre).slice(0, 120)]);
   res.json({ ok: true });
 }));
@@ -175,7 +189,7 @@ app.get('/api/empresa/cierre', auth('empresa'), wrap(async (req, res) => {
   const ya = await one('SELECT * FROM cierres WHERE empresa_id=$1 AND periodo=$2', [e.id, periodo]);
   const emps = await q(`SELECT * FROM empleados WHERE empresa_id=$1 AND estado='adherido' ORDER BY id`, [e.id]);
   const precios = {}; for (const t of Object.keys(FONDOS)) precios[t] = await precioPeriodo(t, periodo);
-  res.json({ periodo, yaAprobado: !!ya, tc: +e.tc, precios, lineas: emps.map(x => ({ id: x.id, nombre: x.nombre, sueldo: +x.sueldo, pct: +x.pct, coPct: coPct(x, e), fondo: x.fondo,
+  res.json({ periodo, yaAprobado: !!ya, tc: +e.tc, precios, ibkrMaestra: e.ibkr_cuenta || '', lineas: emps.map(x => ({ id: x.id, nombre: x.nombre, ibkr: x.ibkr_cuenta || '', sueldo: +x.sueldo, pct: +x.pct, coPct: coPct(x, e), fondo: x.fondo,
     uyuEmpleado: +x.sueldo * +x.pct / 100, uyuEmpresa: +x.sueldo * coPct(x, e) / 100 })) });
 }));
 
@@ -190,8 +204,8 @@ async function aprobarCierre(e, periodo, tc, manuales = {}) {
   const c = await one('INSERT INTO cierres (empresa_id, periodo, tc) VALUES ($1,$2,$3) RETURNING id', [e.id, periodo, tc]);
   for (const x of emps) {
     const ue = +x.sueldo * +x.pct / 100, uc = +x.sueldo * coPct(x, e) / 100, de = ue / tc, dc = uc / tc, p = precios[x.fondo];
-    await q(`INSERT INTO movimientos (cierre_id, empresa_id, empleado_id, periodo, fondo, uyu_empleado, uyu_empresa, usd_empleado, usd_empresa, precio, cuotas_empleado, cuotas_empresa)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`, [c.id, e.id, x.id, periodo, x.fondo, ue, uc, de, dc, p, de / p, dc / p]);
+    await q(`INSERT INTO movimientos (cierre_id, empresa_id, empleado_id, periodo, fondo, uyu_empleado, uyu_empresa, usd_empleado, usd_empresa, precio, cuotas_empleado, cuotas_empresa, ibkr_cuenta)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`, [c.id, e.id, x.id, periodo, x.fondo, ue, uc, de, dc, p, de / p, dc / p, x.ibkr_cuenta || null]);
     totU += ue + uc; totD += de + dc;
   }
   await q('UPDATE cierres SET total_uyu=$2, total_usd=$3 WHERE id=$1', [c.id, totU, totD]);
@@ -221,7 +235,8 @@ async function limpiarSimulaciones() {
   for (const v of viejas) await borrarEmpresa(v.id);
 }
 async function crearSimulacion() {
-  const e = await one(`INSERT INTO empresas (nombre, rut, cant_empleados, match, tope, vesting, tc, plan_ok, demo) VALUES ('Empresa de ejemplo S.A.', '—', 30, 1, 15, 3, 40, true, true) RETURNING *`);
+  const dig = n => String(Math.floor(Math.random() * 10 ** n)).padStart(n, '0');
+  const e = await one(`INSERT INTO empresas (nombre, rut, cant_empleados, match, tope, vesting, tc, plan_ok, demo, ibkr_cuenta) VALUES ('Empresa de ejemplo S.A.', '—', 30, 1, 15, 3, 40, true, true, $1) RETURNING *`, ['F' + dig(7)]);
   const suf = token().slice(0, 10).toLowerCase();
   const rrhh = await one('INSERT INTO usuarios (email, nombre, hash, rol, empresa_id) VALUES ($1,$2,$3,$4,$5) RETURNING id', [`rrhh-${suf}@simulacion.local`, 'Valentina Ruiz (RR.HH.)', 'sim', 'empresa', e.id]);
   // [nombre, cargo, sueldo, aporte %, fondo, mes de ingreso al plan (desde enero 2025), mes en que pausó o null]; ingreso null = invitado sin adherirse
@@ -261,8 +276,8 @@ async function crearSimulacion() {
   for (const [i, g] of gente.entries()) {
     const mail = `empleado${i + 1}-${suf}@simulacion.local`;
     const nunca = g[5] === null;
-    const em = await one('INSERT INTO empleados (empresa_id, nombre, email, cargo, sueldo, estado, pct, fondo, invite_token, autorizado) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id',
-      [e.id, g[0], mail, g[1], g[2], 'invitado', g[3], g[4], nunca ? token() : null, nunca ? null : new Date()]);
+    const em = await one('INSERT INTO empleados (empresa_id, nombre, email, cargo, sueldo, estado, pct, fondo, invite_token, autorizado, ibkr_cuenta) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id',
+      [e.id, g[0], mail, g[1], g[2], 'invitado', g[3], g[4], nunca ? token() : null, nunca ? null : new Date(), nunca ? null : 'U' + dig(7)]);
     if (!nunca) await q('INSERT INTO usuarios (email, nombre, hash, rol, empresa_id, empleado_id) VALUES ($1,$2,$3,$4,$5,$6)', [mail, g[0], 'sim', 'empleado', e.id, em.id]);
     ids.push(em.id);
   }
@@ -312,6 +327,29 @@ app.post('/api/simulacion/salir', auth(), wrap(async (req, res) => {
 
 app.get('/api/empresa/cierres', auth('empresa'), wrap(async (req, res) => {
   res.json({ cierres: await q('SELECT periodo, tc, total_uyu, total_usd, aprobado FROM cierres WHERE empresa_id=$1 ORDER BY periodo DESC', [req.user.empresa_id]) });
+}));
+
+// archivo de asignación por subcuenta: una orden de compra por ETF en la cuenta maestra, repartida entre las subcuentas de los empleados
+app.get('/api/empresa/cierres/:periodo/asignacion.csv', auth('empresa'), wrap(async (req, res) => {
+  const periodo = String(req.params.periodo);
+  const e = await one('SELECT * FROM empresas WHERE id=$1', [req.user.empresa_id]);
+  const c = await one('SELECT * FROM cierres WHERE empresa_id=$1 AND periodo=$2', [e.id, periodo]);
+  if (!c) return res.status(404).json({ error: 'Ese mes no está aprobado' });
+  const movs = await q('SELECT m.*, x.nombre FROM movimientos m JOIN empleados x ON x.id = m.empleado_id WHERE m.cierre_id=$1 ORDER BY m.fondo, x.nombre', [c.id]);
+  const f2 = n => (+n).toFixed(2), f4 = n => (+n).toFixed(4), cell = v => /[",;\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+  const L = [['Cuenta maestra', e.ibkr_cuenta || 'SIN CARGAR', 'Período', periodo, 'Tipo de cambio', f2(c.tc)].map(cell).join(','), '',
+    ['Subcuenta IBKR', 'Empleado', 'Símbolo', 'Acción', 'Monto USD', 'Aporte empleado USD', 'Aporte empresa USD', 'Precio USD', 'Cantidad (cuotas)'].join(',')];
+  const tot = {};
+  for (const m of movs) {
+    const usdT = +m.usd_empleado + +m.usd_empresa, cu = +m.cuotas_empleado + +m.cuotas_empresa;
+    const t = tot[m.fondo] || (tot[m.fondo] = { usd: 0, cu: 0, n: 0 }); t.usd += usdT; t.cu += cu; t.n++;
+    L.push([m.ibkr_cuenta || 'PENDIENTE', m.nombre, m.fondo, 'BUY', f2(usdT), f2(m.usd_empleado), f2(m.usd_empresa), f2(m.precio), f4(cu)].map(cell).join(','));
+  }
+  L.push('', 'Órdenes en la cuenta maestra', ['Símbolo', 'Acción', 'Monto USD', 'Cantidad total', 'Subcuentas'].join(','));
+  for (const [f, t] of Object.entries(tot)) L.push([f, 'BUY', f2(t.usd), f4(t.cu), t.n].join(','));
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="asignacion-ibkr-${periodo}.csv"`);
+  res.send('\ufeff' + L.join('\n'));
 }));
 
 app.get('/api/empresa/resumen', auth('empresa'), wrap(async (req, res) => {
@@ -374,7 +412,7 @@ app.get('/api/empleado/cuenta', auth('empleado'), wrap(async (req, res) => {
   const valor = valOwn + valCo, aportado = ownUsd + coUsd;
   const ult = puntos.length > 1 ? puntos[puntos.length - 2] : null;
   res.json({
-    empleado: { nombre: emp.nombre, estado: emp.estado, pct: +emp.pct, fondo: emp.fondo, sueldo: +emp.sueldo, coPct: coPct(emp, e) },
+    empleado: { nombre: emp.nombre, ibkr: emp.ibkr_cuenta || '', estado: emp.estado, pct: +emp.pct, fondo: emp.fondo, sueldo: +emp.sueldo, coPct: coPct(emp, e) },
     empresa: { nombre: e.nombre, ...planDe(e) },
     fondos: FONDOS,
     precios: Object.fromEntries(Object.entries(series).map(([t, s]) => [t, { actual: s.actual, actualizado: s.actualizado }])),

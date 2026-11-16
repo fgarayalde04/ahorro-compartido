@@ -205,14 +205,17 @@ function planForm(e){
       ${[[3,'Vesting 3 años','⅓ por cada año en el plan.'],[5,'Vesting 5 años','20% por año.'],[0,'Sin vesting','Es del empleado desde el primer día.']].map(v => `<button class="opt ${+e.vesting === v[0] ? 'on' : ''}" data-v="${v[0]}"><b>${v[1]}</b><span>${v[2]}</span></button>`).join('')}</div>
       <p class="note" style="margin:10px 0 0">Si alguien se va antes, la parte no adquirida vuelve a la empresa. El aporte propio del empleado siempre es suyo.</p></div>
     <div class="card"><h2>¿Dónde se invierte?</h2><p style="margin:0">Fondos indexados globales: cada empleado elige <b>MSCI World (URTH)</b> o <b>S&P 500 (SPY)</b>. Las cuotas se registran al precio real de mercado del mes.</p>
-      <label class="f" style="margin:14px 0 0"><b>Tipo de cambio de referencia ($ por US$)</b><input type="number" id="pTC" step="0.1" value="${e.tc}" style="max-width:160px"></label></div>`;
+      <label class="f" style="margin:14px 0 0"><b>Tipo de cambio de referencia ($ por US$)</b><input type="number" id="pTC" step="0.1" value="${e.tc}" style="max-width:160px"></label></div>
+    <div class="card"><h2>Interactive Brokers</h2><p style="margin:0">La empresa opera una <b>cuenta maestra de asesor</b> en Interactive Brokers. Cada empleado tiene una <b>subcuenta a su nombre</b> (U…), que se carga en Empleados. En cada cierre se genera el archivo de asignación por subcuenta.</p>
+      <label class="f" style="margin:14px 0 0"><b>Cuenta maestra (F…)</b><input type="text" id="pIB" value="${esc(e.ibkr || '')}" placeholder="F1234567" style="max-width:200px;text-transform:uppercase"></label>
+      <p class="note" style="margin:6px 0 0">La plataforma no custodia fondos: el dinero va de la empresa a la cuenta maestra y las cuotas quedan en la subcuenta de cada persona.</p></div>`;
 }
 function bindPlan(e, onSave){
   const st = {match: +e.match, tope: +e.tope, vesting: +e.vesting};
   $('pM').oninput = ev => { st.match = +ev.target.value; $('oM').textContent = '$' + st.match.toFixed(2); };
   $('pT').oninput = ev => { st.tope = +ev.target.value; $('oT').textContent = pct(st.tope) + ' del sueldo'; };
   root.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { st.vesting = +b.dataset.v; root.querySelectorAll('[data-v]').forEach(x => x.classList.toggle('on', x === b)); });
-  $('savePlan').onclick = async () => { try { const r = await api('PUT', '/api/empresa/plan', {...st, tc: $('pTC').value}); ME.empresa = r.empresa; toast('Plan guardado'); onSave(); } catch(err){ toast(err.message); } };
+  $('savePlan').onclick = async () => { try { const r = await api('PUT', '/api/empresa/plan', {...st, tc: $('pTC').value, ibkr: $('pIB').value}); ME.empresa = r.empresa; toast('Plan guardado'); onSave(); } catch(err){ toast(err.message); } };
 }
 function costBox(e){
   return `<div class="card" style="position:sticky;top:16px"><h2>Costo estimado</h2>
@@ -271,21 +274,24 @@ async function pEmpleados(){
   const ad = empleados.filter(p => p.estado === 'adherido');
   $('pc').innerHTML = `<h1>Empleados</h1><p class="sub">Tu equipo y cómo está configurado cada uno. Cargá a cada persona con su sueldo nominal; recibe un link personal para crear su cuenta y adherirse.</p>
     <div class="kpis"><div class="kpi"><div class="l">Cargados</div><div class="v">${empleados.length}</div></div><div class="kpi"><div class="l">Adheridos</div><div class="v">${ad.length}</div></div>
+      <div class="kpi"><div class="l">Con subcuenta IBKR</div><div class="v">${ad.filter(p => p.ibkr).length} / ${ad.length}</div><div class="s">de los adheridos</div></div>
       <div class="kpi"><div class="l">Aporte promedio</div><div class="v">${ad.length ? pct(ad.reduce((s, p) => s + p.pct, 0) / ad.length) : '—'}</div></div><div class="kpi"><div class="l">Valor de las cuentas</div><div class="v">${usd(empleados.reduce((s, p) => s + p.valor, 0))}</div></div></div>
     <div class="card"><h2>Agregar empleado</h2><div class="row">
       <input type="text" id="nN" placeholder="Nombre y apellido" class="grow"><input type="email" id="nE" placeholder="Mail" class="grow"><input type="text" id="nC" placeholder="Cargo" class="grow">
       <input type="number" id="nS" placeholder="Sueldo nominal ($)" step="1000" style="max-width:170px"><button class="btn" id="nAdd">Agregar</button></div></div>
-    <div class="card" style="padding:6px 8px">${empleados.length ? `<table><thead><tr><th>Empleado</th><th class="n">Sueldo</th><th>Estado</th><th class="n">Aporta</th><th class="n">Empresa</th><th>Fondo</th><th class="n">Vesting</th><th class="n">Valor</th><th></th></tr></thead><tbody>
+    <div class="card" style="padding:6px 8px">${empleados.length ? `<table><thead><tr><th>Empleado</th><th class="n">Sueldo</th><th>Estado</th><th class="n">Aporta</th><th class="n">Empresa</th><th>Fondo</th><th>Subcuenta IBKR</th><th class="n">Vesting</th><th class="n">Valor</th><th></th></tr></thead><tbody>
       ${empleados.map(p => `<tr><td><b>${esc(p.nombre)}</b><div class="note">${esc(p.cargo || '')}${p.email && !p.email.endsWith('@simulacion.local') ? ' · ' + esc(p.email) : ''}</div></td>
         <td class="n"><input type="number" data-sal="${p.id}" value="${p.sueldo}" step="1000" style="width:120px;text-align:right"></td>
         <td><span class="pill ${st[p.estado][1]}">${st[p.estado][0]}</span>${p.estado === 'invitado' && p.cuentaCreada ? '<div class="note">Creó su cuenta</div>' : ''}</td>
         <td class="n">${p.estado === 'adherido' ? pct(p.pct) : '—'}</td><td class="n">${p.estado === 'adherido' ? pct(p.aporteEmpresaPct) : '—'}</td><td>${p.estado === 'adherido' ? p.fondo : '—'}</td>
+        <td><input type="text" data-ib="${p.id}" value="${esc(p.ibkr)}" placeholder="${p.estado === 'adherido' ? 'Cargar U…' : 'U…'}" style="width:110px;text-transform:uppercase${p.estado === 'adherido' && !p.ibkr ? ';border-color:#d4a72c' : ''}"></td>
         <td class="n">${p.vesting !== null ? Math.round(p.vesting * 100) + '%' + `<div class="note">desde ${per(p.inicio)}</div>` : '—'}</td>
         <td class="n">${p.valor ? usd(p.valor) : '—'}${p.invertido ? `<div class="note">invertido ${usd(p.invertido)}</div>` : ''}</td>
         <td>${p.invitacion ? `<button class="btn sec sm" data-link="${esc(link(p.invitacion))}">Copiar invitación</button>` : ''} ${p.valor ? '' : `<button class="btn sec sm" data-del="${p.id}" title="Borrar">✕</button>`}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">Todavía no cargaste empleados.</div>'}</div>
-    <p class="note">Mandá el link de invitación por WhatsApp o mail. Es personal: sirve una sola vez para crear la cuenta.</p><div id="lk"></div>`;
+    <p class="note">Mandá el link de invitación por WhatsApp o mail. Es personal: sirve una sola vez para crear la cuenta. Cuando Interactive Brokers abre la subcuenta de la persona, cargá su número (U…) para que sus aportes se asignen ahí.</p><div id="lk"></div>`;
   $('nAdd').onclick = async () => { try { await api('POST', '/api/empresa/empleados', {nombre: $('nN').value, email: $('nE').value, cargo: $('nC').value, sueldo: $('nS').value}); toast('Empleado agregado'); pEmpleados(); } catch(e){ toast(e.message); } };
   $('pc').querySelectorAll('[data-sal]').forEach(i => i.onchange = async () => { try { await api('PUT', '/api/empresa/empleados/' + i.dataset.sal, {sueldo: i.value}); toast('Sueldo actualizado'); } catch(e){ toast(e.message); } });
+  $('pc').querySelectorAll('[data-ib]').forEach(i => i.onchange = async () => { try { const r = await api('PUT', '/api/empresa/empleados/' + i.dataset.ib, {ibkr: i.value}); i.value = r.ibkr || ''; toast(r.ibkr ? 'Subcuenta asignada' : 'Subcuenta quitada'); } catch(e){ toast(e.message); } });
   $('pc').querySelectorAll('[data-link]').forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.link); toast('Link copiado'); } catch(e){ $('lk').innerHTML = `<div class="copy">${esc(b.dataset.link)}</div>`; } });
   $('pc').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (b.dataset.c !== '1'){ b.dataset.c = '1'; b.textContent = '¿Borrar?'; return; } try { await api('DELETE', '/api/empresa/empleados/' + b.dataset.del); pEmpleados(); } catch(e){ toast(e.message); } });
 }
@@ -298,13 +304,16 @@ async function pCierre(periodo){
       <label class="f" style="margin:0"><b>Tipo de cambio ($/US$)</b><input type="number" id="cTC" step="0.1" value="${c.tc}" style="max-width:150px"></label>
       ${Object.entries(c.precios).map(([t, p]) => `<label class="f" style="margin:0"><b>Precio ${t} (US$)</b><input type="number" data-px="${t}" step="0.01" value="${p ? (+p).toFixed(2) : ''}" placeholder="ingresar" style="max-width:140px"></label>`).join('')}</div>
       <p class="note" style="margin:10px 0 0">Para meses pasados se usa el cierre de ese mes; para el mes en curso, el último precio. Podés corregirlo a mano.</p></div>`;
-  if (c.yaAprobado) h += `<div class="callout good">${per(c.periodo)} ya está aprobado.</div>`;
+  const sinCta = c.lineas.filter(l => !l.ibkr);
+  if (!c.ibkrMaestra) h += `<div class="callout">Falta la <b>cuenta maestra de Interactive Brokers</b> de la empresa. Cargala en Plan.</div>`;
+  if (c.yaAprobado) h += `<div class="callout good">${per(c.periodo)} ya está aprobado. <a href="/api/empresa/cierres/${c.periodo}/asignacion.csv">Descargar asignación por subcuenta</a></div>`;
+  else if (sinCta.length) h += `<div class="callout">${sinCta.length} persona(s) sin subcuenta IBKR: ${sinCta.map(l => esc(l.nombre)).join(', ')}. Su aporte queda <b>pendiente de asignar</b> hasta que cargues la subcuenta en Empleados.</div>`;
   else if (!c.lineas.length) h += `<div class="card empty">No hay empleados adheridos todavía.</div>`;
-  else h += `<div class="card" style="padding:6px 8px"><table><thead><tr><th>Empleado</th><th>Fondo</th><th class="n">Aporte empleado</th><th class="n">Aporte empresa</th><th class="n">Total</th><th class="n">En US$</th></tr></thead><tbody>
-      ${c.lineas.map(l => `<tr><td>${esc(l.nombre)}<div class="note">${pct(l.pct)} de ${money(l.sueldo)} · empresa ${pct(l.coPct)}</div></td><td>${l.fondo}</td><td class="n">${money(l.uyuEmpleado)}</td><td class="n">${money(l.uyuEmpresa)}</td><td class="n">${money(l.uyuEmpleado + l.uyuEmpresa)}</td><td class="n" data-usd="${l.uyuEmpleado + l.uyuEmpresa}"></td></tr>`).join('')}
-      <tr class="tot"><td colspan="2">Total (${c.lineas.length})</td><td class="n">${money(tE)}</td><td class="n">${money(tC)}</td><td class="n">${money(tE + tC)}</td><td class="n" data-usd="${tE + tC}"></td></tr></tbody></table></div>
-      <div class="row"><button class="btn" id="cOk">Aprobar ${per(c.periodo)}</button><span class="note">Genera los descuentos de nómina, la transferencia al custodio y la orden de compra por subcuenta.</span></div>`;
-  h += `<div class="card" style="margin-top:16px"><h2>Cierres aprobados</h2>${cierres.length ? `<table><tr><th>Mes</th><th class="n">Tipo de cambio</th><th class="n">Total</th><th class="n">En US$</th></tr>${cierres.map(x => `<tr><td>${per(x.periodo)}</td><td class="n">${(+x.tc).toFixed(2)}</td><td class="n">${money(x.total_uyu)}</td><td class="n">${usd(x.total_usd)}</td></tr>`).join('')}</table>` : '<div class="empty">Todavía no hay cierres.</div>'}</div>`;
+  else h += `<div class="card" style="padding:6px 8px"><table><thead><tr><th>Empleado</th><th>Subcuenta IBKR</th><th>Fondo</th><th class="n">Aporte empleado</th><th class="n">Aporte empresa</th><th class="n">Total</th><th class="n">En US$</th></tr></thead><tbody>
+      ${c.lineas.map(l => `<tr><td>${esc(l.nombre)}<div class="note">${pct(l.pct)} de ${money(l.sueldo)} · empresa ${pct(l.coPct)}</div></td><td>${l.ibkr ? `<code>${esc(l.ibkr)}</code>` : '<span class="pill p-warn">Pendiente</span>'}</td><td>${l.fondo}</td><td class="n">${money(l.uyuEmpleado)}</td><td class="n">${money(l.uyuEmpresa)}</td><td class="n">${money(l.uyuEmpleado + l.uyuEmpresa)}</td><td class="n" data-usd="${l.uyuEmpleado + l.uyuEmpresa}"></td></tr>`).join('')}
+      <tr class="tot"><td colspan="3">Total (${c.lineas.length})</td><td class="n">${money(tE)}</td><td class="n">${money(tC)}</td><td class="n">${money(tE + tC)}</td><td class="n" data-usd="${tE + tC}"></td></tr></tbody></table></div>
+      <div class="row"><button class="btn" id="cOk">Aprobar ${per(c.periodo)}</button><span class="note">Genera los descuentos de nómina, la transferencia a la cuenta maestra${c.ibkrMaestra ? ' ' + esc(c.ibkrMaestra) : ''} y el archivo de asignación de la compra por subcuenta.</span></div>`;
+  h += `<div class="card" style="margin-top:16px"><h2>Cierres aprobados</h2>${cierres.length ? `<table><tr><th>Mes</th><th class="n">Tipo de cambio</th><th class="n">Total</th><th class="n">En US$</th><th>Asignación IBKR</th></tr>${cierres.map(x => `<tr><td>${per(x.periodo)}</td><td class="n">${(+x.tc).toFixed(2)}</td><td class="n">${money(x.total_uyu)}</td><td class="n">${usd(x.total_usd)}</td><td><a href="/api/empresa/cierres/${x.periodo}/asignacion.csv">CSV por subcuenta</a></td></tr>`).join('')}</table>` : '<div class="empty">Todavía no hay cierres.</div>'}</div>`;
   $('pc').innerHTML = h;
   const upd = () => { const tc = +$('cTC').value || 1; $('pc').querySelectorAll('[data-usd]').forEach(td => td.textContent = usd(+td.dataset.usd / tc)); };
   upd(); $('cTC').oninput = upd;
@@ -406,7 +415,7 @@ function eCuenta(){
       <div class="mv"><span>Tus aportes</span><b>${usd(k.aportadoPropioUsd)}</b></div><div class="mv"><span>Aportes de ${esc(C.empresa.nombre)}</span><b style="color:var(--accent)">${usd(k.aportadoEmpresaUsd)}</b></div>
       <div class="mv"><span>Rendimiento</span><b style="color:${col(k.ganancia)}">${usd(k.ganancia)}</b></div><div class="mv"><span><b>Valor de la cuenta</b></span><b>${usd(k.valor)}</b></div>
       <div class="mv"><span>Si te vas hoy te llevás</span><b>${usd(k.siTeVas)}</b></div></div>
-    <div class="mc"><h3>Datos de la cuenta</h3><div class="mv"><span>Inicio</span><span>${per(k.inicio)}</span></div><div class="mv"><span>Meses con aportes</span><span>${k.meses}</span></div><div class="mv"><span>Custodio</span><span>Interactive Brokers</span></div></div>
+    <div class="mc"><h3>Datos de la cuenta</h3><div class="mv"><span>Inicio</span><span>${per(k.inicio)}</span></div><div class="mv"><span>Meses con aportes</span><span>${k.meses}</span></div><div class="mv"><span>Custodio</span><span>Interactive Brokers</span></div><div class="mv"><span>Tu subcuenta</span><span>${C.empleado.ibkr ? `<code>${esc(C.empleado.ibkr)}</code>` : 'En apertura'}</span></div></div>
     <p class="note"><b>Cómo leer los rendimientos.</b> El <b>rendimiento del fondo</b> es lo que rindió un dólar invertido el primer mes. El <b>anualizado</b> es ese rendimiento llevado a un año, considerando cuándo entró cada aporte. La <b>ganancia sobre lo aportado</b> es menor porque los aportes entran mes a mes: los últimos llevan poco tiempo invertidos.</p>
     <p class="note">Valores en dólares. Rendimientos pasados no garantizan rendimientos futuros.</p>`;
   $('ec').querySelectorAll('[data-r]').forEach(b => b.onclick = () => { RANGE = b.dataset.r; eCuenta(); });
