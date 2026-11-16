@@ -82,7 +82,7 @@ td input{padding:6px 8px}
         <div class="card"><h2>Tus empleados</h2><div style="overflow-x:auto"><table id="eTab"></table></div>
           <p class="note" style="margin:10px 0 0">Podés editar sueldo, aporte y cantidad directamente en la tabla.</p></div>
         <div class="card"><h2>Costo mensual</h2><table id="eCost"></table>
-          <p class="note" style="margin:10px 0 0">Servicio de referencia: $250 por empleado por mes. Si el aporte va a una cuenta de inversión, podría haber cargas de BPS a validar con un contador.</p></div>
+          <p class="note" style="margin:10px 0 0">Servicio de referencia: $250 por empleado por mes. Si el aporte va a una cuenta de inversión, BPS podría considerarlo salario: la tabla muestra ese escenario, a validar con un contador.</p></div>
         <div class="cta"><p><b>¿Te sirve este plan?</b> Registrá tu empresa, configuralo y cargá a tu equipo.</p><a class="btn" href="/app?registro">Registrar mi empresa</a></div>
       </div>
     </div>
@@ -133,6 +133,7 @@ window.addEventListener('hashchange', route);
 // ---------- empresa ----------
 let team = [{n:'Administrativos', s:55000, p:4, q:20}, {n:'Analistas', s:85000, p:5, q:12}, {n:'Gerentes', s:180000, p:6, q:3}];
 const eVest = seg('eV', calcE);
+const BPS = 0.126; // aporte jubilatorio patronal 7,5% + FONASA 5% + FRL y FGCL; escenario a validar con un contador
 function calcE(){
   const M = +$('eM').value, T = +$('eT').value, TC = +$('eTC').value || 40;
   $('eMo').textContent = '$' + M.toFixed(2); $('eTo').textContent = pct(T) + ' del sueldo';
@@ -151,6 +152,8 @@ function calcE(){
     <tr><td>Aportes de la empresa</td><td class="n">${money(aC)}</td><td class="n">${money(aC * 12)}</td></tr>
     <tr><td>Servicio (${n} × ${money(FEE)})</td><td class="n">${money(fee)}</td><td class="n">${money(fee * 12)}</td></tr>
     <tr><td><b>Total para la empresa</b></td><td class="n"><b>${money(tot)}</b></td><td class="n"><b>${money(tot * 12)}</b></td></tr>
+    <tr><td class="note">Si BPS gravara el aporte de la empresa (cargas patronales, aprox. 12,6%)</td><td class="n note">+${money(aC * BPS)}</td><td class="n note">+${money(aC * BPS * 12)}</td></tr>
+    <tr><td class="note">Total con cargas de BPS (escenario a validar)</td><td class="n note">${money(tot + aC * BPS)}</td><td class="n note">${money((tot + aC * BPS) * 12)}</td></tr>
     <tr><td class="note">Aportan los empleados (descuento de su sueldo)</td><td class="n note">${money(aE)}</td><td class="n note">${money(aE * 12)}</td></tr>`;
   document.querySelectorAll('#eTab input').forEach(inp => inp.onchange = () => { team[+inp.dataset.i][inp.dataset.k] = Math.max(0, +inp.value || 0); calcE(); });
   document.querySelectorAll('#eTab [data-del]').forEach(b => b.onclick = () => { team.splice(+b.dataset.del, 1); calcE(); });

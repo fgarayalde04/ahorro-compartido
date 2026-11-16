@@ -231,7 +231,7 @@ function bindCost(getPlan){
     $('ceAo').textContent = Math.round(A * 100) + '%'; $('cePo').textContent = pct(P);
     const n = Math.round(N * A), co = Math.min(P * pl.match, pl.tope), mes = n * S * co / 100, fee = n * 250;
     $('ceOut').innerHTML = `<div class="mv"><span>${n} adheridos · empresa pone ${pct(co)}</span><b>${money(mes)}/mes</b></div><div class="mv"><span>Servicio (${money(250)} por adherido)</span><b>${money(fee)}/mes</b></div>
-      <div class="mv"><span><b>Total</b></span><b>${money(mes + fee)}/mes</b></div><p class="note" style="margin:6px 0 0">${money((mes + fee) * 12)} al año · ${N && S ? pct((mes + fee) / (N * S) * 100) : '—'} de la nómina. Precio del servicio de referencia.</p>`;
+      <div class="mv"><span><b>Total</b></span><b>${money(mes + fee)}/mes</b></div><div class="mv"><span>Si BPS gravara el aporte (aprox. 12,6%)</span><span>+${money(mes * 0.126)}/mes</span></div><p class="note" style="margin:6px 0 0">${money((mes + fee) * 12)} al año · ${N && S ? pct((mes + fee) / (N * S) * 100) : '—'} de la nómina. Precio del servicio de referencia.</p>`;
   };
   ['ceN','ceS','ceA','ceP'].forEach(id => $(id).oninput = upd);
   root.querySelectorAll('#pM,#pT').forEach(i => i.addEventListener('input', upd));
